@@ -24,7 +24,7 @@ Spring 3.2.18
 | core.io               |                    |      |
 |                       |                    |      |
 
-p means package，c means class，i means interface, f means function
+p means package，c means class，i means interface, f means function,a means abstract class
 
 - beans(p)
   - factory(p)：存放所有的工厂接口  
@@ -32,9 +32,10 @@ p means package，c means class，i means interface, f means function
       - DefaultBeanFactory(c):BeanFactory的默认实现
       - GenericBeanDefinition(c):GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
-      - ClassPathXmlApplicationContext:解析xml文件并生成bean实例
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
+    - config
+      - ConfigurableBeanFactory:提供Factory的配置功能
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
@@ -42,6 +43,10 @@ p means package，c means class，i means interface, f means function
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
 - context
   - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
+  - support
+    - AbstractApplicationContext(a):ApplicationContext接口的通用实现
+    - ClassPathXmlApplicationContext:解析xml文件并生成bean实例
+    - FileSystemXmlApplicationContext:解析xml文件并生成bean实例
 - core
   - io
     - Resource(I):Interface for a resource descriptor that abstracts from the actual type of underlying resource, such as a file or class path resource.
@@ -101,13 +106,13 @@ AOP（Aspect Oriented Programming）
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908155522.png)
 
-5. 下面我们继续进行抽象，我们需要判断传入的配置文件是否真的存在。我们既可以从ClassPathResource读取配置文件（借助于ClassLoader），也可以从FileSystemResource(借助于FileSystem)配置文件，所以我们定义一个Resource接口，及其两个实现ClassPathResource和FileSystemResource，如下图所示：
+5. 下面我们继续进行抽象，我们需要**判断传入的配置文件是否真的存在**(请注意，这个是支路，不是主干)。我们既可以从ClassPathResource读取配置文件（借助于ClassLoader），也可以从FileSystemResource(借助于FileSystem)配置文件，所以我们定义一个Resource接口，及其两个实现ClassPathResource和FileSystemResource，如下图所示：
 
 ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908162024.png?raw=true)
 
 6. 下面我们需要把Resource提取出来，进行代码的重构，主要修改XmlBeanDefinitionReader。
 
-7. 下面我们需要实现FileSystemXMLApplicationContext，关系图如下所示：
+7. 下面我们需要回到主干，接着看ApplicationContext相关的。实现FileSystemXMLApplicationContext和，关系图如下所示：
 
 ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908162935.png?raw=true)
 
@@ -115,9 +120,9 @@ AOP（Aspect Oriented Programming）
 
    ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908170723.png?raw=true)
 
-   ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908170723.png?raw=true)
+   
 
-9. 上面的实现中，我们的ClassLoader都是获取的默认的，不支持用户来传入，下面我们来进行优化，支持用户传入一个ClassLoader。为此，我们定义了一个接口，ConfigurableBeanFactory。关系如下图所示：
+9. 上面的实现中，我们的ClassLoader都是获取的默认的，不支持用户来传入，下面我们来进行优化，支持用户传入一个ClassLoader。我们最开始是想把setBeanClassLoader放在BeanFactory接口中，但是这样不是很好，频繁使用的接口，最好只有get方法，尽量少的set方法。所以，我们定义了一个接口，ConfigurableBeanFactory。关系如下图所示：
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908211924.png)
 

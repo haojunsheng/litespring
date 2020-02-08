@@ -8,6 +8,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.litespring.beans.factory.config.ConfigurableBeanFactory;
 import org.litespring.util.ClassUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,9 +17,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 // BeanFactory的默认实现
-public class DefaultBeanFactory implements BeanFactory,BeanDefinitionRegistry {
+public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitionRegistry {
     // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
+    private ClassLoader beanClassLoader;
 
     public DefaultBeanFactory() {
     }
@@ -38,7 +40,7 @@ public class DefaultBeanFactory implements BeanFactory,BeanDefinitionRegistry {
         if(bd == null){
             return null;
         }
-        ClassLoader cl = ClassUtils.getDefaultClassLoader();
+        ClassLoader cl = this.getBeanClassLoader();
         String beanClassName = bd.getBeanClassName();
         try {
             Class<?> clz = cl.loadClass(beanClassName);
@@ -46,5 +48,13 @@ public class DefaultBeanFactory implements BeanFactory,BeanDefinitionRegistry {
         } catch (Exception e) {
             throw new BeanCreationException("create bean for "+ beanClassName +" failed",e);
         }
+    }
+
+    public void setBeanClassLoader(ClassLoader beanClassLoader) {
+        this.beanClassLoader = beanClassLoader;
+    }
+
+    public ClassLoader getBeanClassLoader() {
+        return (this.beanClassLoader != null ? this.beanClassLoader : ClassUtils.getDefaultClassLoader());
     }
 }
