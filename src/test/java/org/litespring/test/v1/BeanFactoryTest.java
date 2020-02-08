@@ -13,6 +13,7 @@ public class BeanFactoryTest {
 
     /**
      *  测试用例和空的类实现
+     *  实现了根据xml文件的beanID生成相应实例的方法
      */
     @Test
     public void testGetBean() {
