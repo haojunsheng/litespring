@@ -10,9 +10,45 @@ package org.litespring.beans;
  * 是否是单例的
  * 是否懒加载
  * 这个Bean依赖了哪些Bean等等。
+ *
+ * 定义了Bean的样子，添加了SCOPE_SINGLETON，SCOPE_PROTOTYPE和SCOPE_DEFAULT字段
+ * 新增了2个判断方法，setScope和getScope方法
  */
 public interface BeanDefinition {
+    /**
+     * Scope identifier for the standard singleton scope: "singleton".
+     * <p>Note that extended bean factories might support further scopes.
+     * @see #setScope
+     */
+    public static final String SCOPE_SINGLETON = "singleton";
+    /**
+     * Scope identifier for the standard prototype scope: "prototype".
+     * <p>Note that extended bean factories might support further scopes.
+     * @see #setScope
+     */
+    public static final String SCOPE_PROTOTYPE = "prototype";
+    public static final String SCOPE_DEFAULT = "";
 
+    /**
+     * Return whether this a <b>Singleton</b>, with a single, shared instance
+     * returned on all calls.
+     * @see #SCOPE_SINGLETON
+     */
+    public boolean isSingleton();
+    /**
+     * Return whether this a <b>Prototype</b>, with an independent instance
+     * returned for each call.
+     * @see #SCOPE_PROTOTYPE
+     */
+    public boolean isPrototype();
+    String getScope();
+    void setScope(String scope);
+    /**
+     * Return the current bean class name of this bean definition.
+     * <p>Note that this does not have to be the actual class name used at runtime, in
+     * case of a child definition overriding/inheriting the class name from its parent.
+     * Hence, do <i>not</i> consider this to be the definitive bean type at runtime but
+     * rather only use it for parsing purposes at the individual bean definition level.
+     */
     String getBeanClassName();
-
 }

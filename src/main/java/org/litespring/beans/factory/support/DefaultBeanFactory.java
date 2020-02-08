@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 // BeanFactory的默认实现
-public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitionRegistry {
+public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory,BeanDefinitionRegistry {
     // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
     private ClassLoader beanClassLoader;
@@ -40,6 +40,18 @@ public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitio
         if(bd == null){
             return null;
         }
+        if (bd.isSingleton()) {
+            Object bean = this.getSingleton(beanID);
+            if (bean == null) {
+                bean = createBean(bd);
+                this.registerSingleton(beanID, bean);
+            }
+            return bean;
+        }
+        return createBean(bd);
+    }
+
+    private Object createBean(BeanDefinition bd) {
         ClassLoader cl = this.getBeanClassLoader();
         String beanClassName = bd.getBeanClassName();
         try {

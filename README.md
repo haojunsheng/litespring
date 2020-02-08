@@ -32,10 +32,12 @@ p means package，c means class，i means interface, f means function,a means ab
       - DefaultBeanFactory(c):BeanFactory的默认实现
       - GenericBeanDefinition(c):GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
+      - DefaultSingletonBeanRegistry(C):单例bean注册的通用实现
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
     - config
-      - ConfigurableBeanFactory:提供Factory的配置功能
+      - ConfigurableBeanFactory(I):提供Factory的配置功能
+      - SingletonBeanRegistry(I):单例类注册
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
@@ -167,7 +169,7 @@ public interface BeanDefinition {
 
 然后定义了SingletonBeanRegistry接口，让DefaultSingletonBeanRegistry 继承SingletonBeanRegistry，完成了beanName和singletonObject的映射。
 
-再然后让DefaultBeanFactory 继承DefaultSingletonBeanRegistry ，在getBean的时候，判断bd如果是单例，并且不存在，则创建，否则直接创建bd实例。
+再然后让DefaultBeanFactory 继承DefaultSingletonBeanRegistry ，在getBean的时候，判断bd如果是单例，并且不存在，则创建，否则直接使用bd实例。
 
 最后，不要忘记在XmlBeanDefinitionReader的构造方法中设置SCOPE_ATTRIBUTE。
 
