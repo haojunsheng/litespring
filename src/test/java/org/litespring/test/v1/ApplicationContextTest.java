@@ -1,0 +1,19 @@
+package org.litespring.test.v1;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.litespring.context.ApplicationContext;
+import org.litespring.beans.factory.support.ClassPathXmlApplicationContext;
+import org.litespring.service.v1.PetStoreService;
+
+/**
+ *  封装了xml文件的解析和bean的实例化
+ */
+public class ApplicationContextTest {
+    @Test
+    public void testGetBean() {
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("petstore-v1.xml");
+        PetStoreService petStore = (PetStoreService)ctx.getBean("petStore");
+        Assert.assertNotNull(petStore);
+    }
+}

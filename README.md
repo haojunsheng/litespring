@@ -32,6 +32,7 @@ p means package，c means class，i means interface, f means function
       - DefaultBeanFactory(c):BeanFactory的默认实现
       - GenericBeanDefinition(c):GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
+      - ClassPathXmlApplicationContext:解析xml文件并生成bean实例
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
     - BeanFactory(I):The root interface for accessing a Spring bean container
@@ -39,6 +40,8 @@ p means package，c means class，i means interface, f means function
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
   - BeanDefinition(I):BeanDefinition中保存了我们的Bean信息
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
+- context
+  - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
 
 ## 1.1 介绍Spring IoC, AOP
 
