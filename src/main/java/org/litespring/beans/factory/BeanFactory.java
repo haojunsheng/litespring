@@ -65,8 +65,14 @@ import org.litespring.beans.BeanDefinition;
  * 3. a custom destroy-method definition
  *
  */public interface BeanFactory {
-     // 获取bean的定义
-    BeanDefinition getBeanDefinition(String beanID);
-    // 获取bean的实例
+    /**
+     * Return an instance, which may be shared or independent, of the specified bean.
+     * <p>This method allows a Spring BeanFactory to be used as a replacement for the
+     * Singleton or Prototype design pattern. Callers may retain references to
+     * returned objects in the case of Singleton beans.
+     * <p>Translates aliases back to the corresponding canonical bean name.
+     * Will ask the parent factory if the bean cannot be found in this factory instance.
+     * 根据名字获取Bean的实例
+     */
     Object getBean(String beanID);
 }

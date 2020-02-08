@@ -3,24 +3,32 @@ package org.litespring.test.v1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.litespring.beans.BeanDefinition;
 import org.litespring.beans.factory.BeanCreationException;
 import org.litespring.beans.factory.BeanDefinitionStoreException;
 import org.litespring.beans.factory.BeanFactory;
 import org.litespring.beans.factory.support.DefaultBeanFactory;
+import org.litespring.beans.factory.xml.XmlBeanDefinitionReader;
 import org.litespring.service.v1.PetStoreService;
 
 public class BeanFactoryTest {
+    DefaultBeanFactory factory = null;
+    XmlBeanDefinitionReader reader = null;
+    @Before
+    public void setUp(){
+        factory = new DefaultBeanFactory();
+        reader = new XmlBeanDefinitionReader(factory);
+
+    }
     /**
      *  测试用例和空的类实现
      *  实现了根据xml文件的beanID生成相应实例的方法
      */
     @Test
     public void testGetBean() {
-        // 从xml文件实例化工厂
-        BeanFactory factory = new DefaultBeanFactory("petstore-v1.xml");
-        // 根据beanID获取BeanDefinition
+        reader.loadBeanDefinitions("petstore-v1.xml");
         BeanDefinition bd = factory.getBeanDefinition("petStore");
 
         assertEquals("org.litespring.service.v1.PetStoreService",bd.getBeanClassName());
@@ -34,7 +42,7 @@ public class BeanFactoryTest {
     @Test
     public void testInvalidBean(){
 
-        BeanFactory factory = new DefaultBeanFactory("petstore-v1.xml");
+        reader.loadBeanDefinitions("petstore-v1.xml");
         try{
             factory.getBean("invalidBean");
         }catch(BeanCreationException e){
@@ -48,7 +56,7 @@ public class BeanFactoryTest {
     public void testInvalidXML(){
 
         try{
-            new DefaultBeanFactory("xxxx.xml");
+            reader.loadBeanDefinitions("xxx.xml");
         }catch(BeanDefinitionStoreException e){
             System.out.println(e);
             return;
