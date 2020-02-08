@@ -42,6 +42,11 @@ p means package，c means class，i means interface, f means function
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
 - context
   - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
+- core
+  - io
+    - Resource(I):Interface for a resource descriptor that abstracts from the actual type of underlying resource, such as a file or class path resource.
+    - ClassPathResource:Uses either a given ClassLoader or a given Class for loading resources.
+    - FileSystemResource:对java.io.File类型资源的封装，只要是跟File打交道的，基本上都可以使用FileSystemResource。
 
 ## 1.1 介绍Spring IoC, AOP
 
