@@ -3,6 +3,8 @@ package org.litespring.beans.factory.support;
 import org.litespring.context.ApplicationContext;
 
 import org.litespring.beans.factory.xml.XmlBeanDefinitionReader;
+import org.litespring.core.io.ClassPathResource;
+import org.litespring.core.io.Resource;
 
 /**
  * Standalone XML application context, taking the context definition files
@@ -24,7 +26,8 @@ public class ClassPathXmlApplicationContext implements ApplicationContext {
     public ClassPathXmlApplicationContext(String configFile){
         factory = new DefaultBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-        reader.loadBeanDefinitions(configFile);
+        Resource resource = new ClassPathResource(configFile);
+        reader.loadBeanDefinitions(resource);
     }
 
     public Object getBean(String beanID) {

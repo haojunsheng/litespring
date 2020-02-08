@@ -11,6 +11,7 @@ import org.litespring.beans.BeanDefinition;
 import org.litespring.beans.factory.BeanDefinitionStoreException;
 import org.litespring.beans.factory.support.BeanDefinitionRegistry;
 import org.litespring.beans.factory.support.GenericBeanDefinition;
+import org.litespring.core.io.Resource;
 import org.litespring.util.ClassUtils;
 /**
  * Bean definition reader for XML bean definitions.
@@ -28,11 +29,10 @@ public class XmlBeanDefinitionReader {
     }
     // 建立beanID 和 BeanDefinition的映射
     // load bean definitions from the specified XML file
-    public void loadBeanDefinitions(String configFile){
+    public void loadBeanDefinitions(Resource resource){
         InputStream is = null;
         try{
-            ClassLoader cl = ClassUtils.getDefaultClassLoader();
-            is = cl.getResourceAsStream(configFile);
+            is = resource.getInputStream();
             SAXReader reader = new SAXReader();
             Document doc = reader.read(is);
 
@@ -45,8 +45,8 @@ public class XmlBeanDefinitionReader {
                 BeanDefinition bd = new GenericBeanDefinition(id,beanClassName);
                 this.registry.registerBeanDefinition(id, bd);
             }
-        } catch (DocumentException e) {
-            throw new BeanDefinitionStoreException("IOException parsing XML document from " + configFile,e);
+        } catch (Exception e) {
+            throw new BeanDefinitionStoreException("IOException parsing XML document from " + resource.getDescription(),e);
         }finally{
             if(is != null){
                 try {
