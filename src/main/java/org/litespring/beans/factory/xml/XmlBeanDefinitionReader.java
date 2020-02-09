@@ -36,42 +36,43 @@ public class XmlBeanDefinitionReader {
     BeanDefinitionRegistry registry;
     protected final Log logger = LogFactory.getLog(getClass());
 
-    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry){
+    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry) {
         this.registry = registry;
     }
 
     /**
      * Load bean definitions from the specified XML file.
+     *
      * @param resource the resource descriptor for the XML file
      * @return the number of bean definitions found
      * @throws BeanDefinitionStoreException in case of loading or parsing errors
-     * 从指定的xml资源中加载BeanDefinition
-     * 建立beanID 和 BeanDefinition的映射
+     *                                      从指定的xml资源中加载BeanDefinition
+     *                                      建立beanID 和 BeanDefinition的映射
      */
-    public void loadBeanDefinitions(Resource resource){
+    public void loadBeanDefinitions(Resource resource) {
         InputStream is = null;
-        try{
+        try {
             is = resource.getInputStream();
             SAXReader reader = new SAXReader();
             Document doc = reader.read(is);
 
             Element root = doc.getRootElement(); //<beans>
             Iterator<Element> iter = root.elementIterator();
-            while(iter.hasNext()){
-                Element ele = (Element)iter.next();
+            while (iter.hasNext()) {
+                Element ele = (Element) iter.next();
                 String id = ele.attributeValue(ID_ATTRIBUTE);
                 String beanClassName = ele.attributeValue(CLASS_ATTRIBUTE);
-                BeanDefinition bd = new GenericBeanDefinition(id,beanClassName);
+                BeanDefinition bd = new GenericBeanDefinition(id, beanClassName);
                 if (ele.attribute(SCOPE_ATTRIBUTE) != null) {
                     bd.setScope(ele.attributeValue(SCOPE_ATTRIBUTE));
                 }
-                parsePropertyElement(ele,bd);
+                parsePropertyElement(ele, bd);
                 this.registry.registerBeanDefinition(id, bd);
             }
         } catch (Exception e) {
-            throw new BeanDefinitionStoreException("IOException parsing XML document from " + resource.getDescription(),e);
-        }finally{
-            if(is != null){
+            throw new BeanDefinitionStoreException("IOException parsing XML document from " + resource.getDescription(), e);
+        } finally {
+            if (is != null) {
                 try {
                     is.close();
                 } catch (IOException e) {
@@ -82,9 +83,9 @@ public class XmlBeanDefinitionReader {
     }
 
     public void parsePropertyElement(Element beanElem, BeanDefinition bd) {
-        Iterator iter= beanElem.elementIterator(PROPERTY_ELEMENT);
-        while(iter.hasNext()){
-            Element propElem = (Element)iter.next();
+        Iterator iter = beanElem.elementIterator(PROPERTY_ELEMENT);
+        while (iter.hasNext()) {
+            Element propElem = (Element) iter.next();
             String propertyName = propElem.attributeValue(NAME_ATTRIBUTE);
             if (!StringUtils.hasLength(propertyName)) {
                 logger.fatal("Tag 'property' must have a 'name' attribute");
@@ -102,8 +103,8 @@ public class XmlBeanDefinitionReader {
                 "<property> element for property '" + propertyName + "'" :
                 "<constructor-arg> element";
 
-        boolean hasRefAttribute = (ele.attribute(REF_ATTRIBUTE)!=null);
-        boolean hasValueAttribute = (ele.attribute(VALUE_ATTRIBUTE) !=null);
+        boolean hasRefAttribute = (ele.attribute(REF_ATTRIBUTE) != null);
+        boolean hasValueAttribute = (ele.attribute(VALUE_ATTRIBUTE) != null);
 
         if (hasRefAttribute) {
             String refName = ele.attributeValue(REF_ATTRIBUTE);
@@ -112,12 +113,11 @@ public class XmlBeanDefinitionReader {
             }
             RuntimeBeanReference ref = new RuntimeBeanReference(refName);
             return ref;
-        }else if (hasValueAttribute) {
+        } else if (hasValueAttribute) {
             TypedStringValue valueHolder = new TypedStringValue(ele.attributeValue(VALUE_ATTRIBUTE));
 
             return valueHolder;
-        }
-        else {
+        } else {
             throw new RuntimeException(elementName + " must specify a ref or value");
         }
     }

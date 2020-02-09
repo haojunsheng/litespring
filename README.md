@@ -33,6 +33,7 @@ p means package，c means class，i means interface, f means function,a means ab
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
+    - BeanDefinitionValueResolver(C):用于把beanID生成相应的实例
   - BeanDefinition(I):BeanDefinition中保存了我们的Bean信息
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
   - PropertyValue(C):Object to hold information and value for an individual bean property.
@@ -208,7 +209,7 @@ public interface BeanDefinition {
 | setter   |      |      |
 | 注解     |      |      |
 
-1. 实现PropertyValue相关的代码
+1. 实现PropertyValue相关的代码(获取Bean的定义)
 
    我们要表达petstore-v2.xml中的property属性，为此引入了PropertyValue来表示property属性。
    
