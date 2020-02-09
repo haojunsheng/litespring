@@ -1,5 +1,6 @@
 package org.litespring.beans.factory.support;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.litespring.beans.PropertyValue;
 import org.litespring.beans.SimpleTypeConverter;
 import org.litespring.beans.factory.BeanCreationException;
@@ -33,6 +34,7 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     SimpleTypeConverter converter = new SimpleTypeConverter();
 
     public DefaultBeanFactory() {
+
     }
 
     // 根据beanID获取BeanDefinition
@@ -56,9 +58,29 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
                 bean = createBean(bd);
                 this.registerSingleton(beanID, bean);
             }
+            //使用apache提供的方法
+            //populateBeanUseCommonUtils(bd,bean);
             return bean;
         }
         return createBean(bd);
+    }
+
+    private void populateBeanUseCommonUtils(BeanDefinition bd, Object bean) {
+        List<PropertyValue> pvs = bd.getPropertyValues();
+        if (null == pvs || pvs.isEmpty()) {
+            return;
+        }
+        BeanDefinitionValueResolver valueResolver = new BeanDefinitionValueResolver(this);
+        try {
+            for (PropertyValue pv : pvs) {
+                String propertyName = pv.getName();
+                Object originalValue = pv.getValue();
+                Object resolvedValue = valueResolver.resolveValueIfNecessary(originalValue);
+                BeanUtils.setProperty(bean, propertyName, resolvedValue);
+            }
+        } catch (Exception e) {
+            throw new BeanCreationException("Failed to obtain BeanInfo for class [" + bd.getBeanClassName() + "]", e);
+        }
     }
 
     private Object createBean(BeanDefinition bd) {
