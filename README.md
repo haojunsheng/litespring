@@ -14,16 +14,6 @@ https://github.com/dachengxi/spring-framework-3.2.18.RELEASE
 
 Spring 3.2.18
 
-| 包名                  | 含义               | 备注 |
-| --------------------- | ------------------ | ---- |
-| beans                 | 存放所有的bean     |      |
-| beans.factory         | 存放所有的工厂接口 |      |
-| beans.factory.support | 所有工厂的实现     |      |
-| beans.factory.config; | 可配置文件         |      |
-| core                  |                    |      |
-| core.io               |                    |      |
-|                       |                    |      |
-
 p means package，c means class，i means interface, f means function,a means abstract class
 
 - beans(p)
@@ -38,11 +28,14 @@ p means package，c means class，i means interface, f means function,a means ab
     - config
       - ConfigurableBeanFactory(I):提供Factory的配置功能
       - SingletonBeanRegistry(I):单例类注册
+      - RuntimeBeanReference(C):Immutable placeholder class used for a property value object when it's a reference to another bean in the factory, to be resolved at runtime.
+      - TypedStringValue(C):Holder for a typed String value. Can be added to bean definitions in order to explicitly specify a target type for a String value
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
   - BeanDefinition(I):BeanDefinition中保存了我们的Bean信息
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
+  - PropertyValue(C):Object to hold information and value for an individual bean property.
 - context
   - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
   - support
@@ -204,3 +197,69 @@ public interface BeanDefinition {
 | Resource                        | 定义了资源的抽象                 |                    |
 | ClassPathResource               | 从路径获取资源                   |                    |
 | FileSystemResource              | 从文件获取资源                   |                    |
+
+# 2. setter-injection
+
+在上面，我们用构造函数的方式实现了类的注入，正如我们所知道的，spring IOC的常见注入方式分为3中，分别是构造函数，setter方式和注解的方式，这节课我们来学习注解的方式。
+
+| 注入方式 | 优点 | 缺点 |
+| -------- | ---- | ---- |
+| 构造函数 |      |      |
+| setter   |      |      |
+| 注解     |      |      |
+
+1. 实现PropertyValue相关的代码
+
+   我们要表达petstore-v2.xml中的property属性，为此引入了PropertyValue来表示property属性。
+   
+   ![](https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200209151219.png)
+
+我们使用PropertyValue来表示property属性。值得注意的是，值分为两种，一种是引用，另外一种是值，所以我们需要getPropertyValues方法把reference进行转换。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190909182040.png)
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190909181258.png)
+
+在BeanDefinition中定义了getPropertyValues接口，在GenericBeanDefinition中实现了该方法。
+
+最后在XmlBeanDefinitionReader完成对petstore-v2.xml的解析。
+
+2. 实现BeanDefinitionResolver
+
+   Resolver的含义是把名称变成一个实例的过程。我们新增了BeanDefinitionResolver，用于把beanID生成相应的实例。
+
+3. 实现setter注入
+
+   拆分了getBean，独立出来createBean，createBean分为instantiateBean和populateBean，前者用来创建实例，后者用来设置属性。其中populateBean函数比较重要，使用了反射的机制，来调用相应的bean的set方法。
+   
+4. 实现了TypeConverter，并在DefaultBeanFactory中调用
+
+   由于我们在xml中定义的值都属于字符串的值，但是我们实际需要的可能是Interger,Boolean,Date或者其他类型的。
+
+   我们首先创建CustomNumberEditorTest和CustomBooleanEditorTest，并且实现CustomNumberEditor和CustomBooleanEditor。
+
+   ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190910115828.png)
+
+然后定义TypeConverter 接口，并定义其实现SimpleTypeConverter。
+
+
+
+5. 总结
+
+在这里，我们主要学习了Setter 注入。
+
+首先，我们引入了新的概念PropertyValue，包含RuntimeBeanReference和TypedStringValue。
+
+然后，我们用BeanDefinitionResolver去resolve相应的bean，生成实例。
+
+最后，我们用TypeConverter将字符的值转化为整形，Boolean值等类型。
+
+
+
+| 设计模式                              | 定义 | 备注                                                         |
+| ------------------------------------- | ---- | ------------------------------------------------------------ |
+| 开闭原则（open-close）                |      | AbstractApplicationContext满足了对修改封闭，对扩展开放的原则 |
+| 单一职责原则（single responsibility） |      | XmlBeanDefinitionReader负责解析xml                           |
+| 替换原则（liskov）                    |      | 敏捷软件开发，原则，模式与实践                               |
+| 接口隔离原则（interface seperation）  |      | DefaultBeanFactory                                           |
+| 依赖隔离                              |      |                                                              |

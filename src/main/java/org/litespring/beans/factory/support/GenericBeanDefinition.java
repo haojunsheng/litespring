@@ -1,6 +1,10 @@
 package org.litespring.beans.factory.support;
 
 import org.litespring.beans.BeanDefinition;
+import org.litespring.beans.PropertyValue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
@@ -20,6 +24,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     private boolean singleton = true;
     private boolean prototype = false;
     private String scope = SCOPE_DEFAULT;
+    List<PropertyValue> propertyValues = new ArrayList<PropertyValue>();
     public GenericBeanDefinition(String beanID, String beanClassName) {
         this.beanID = beanID;
         this.beanClassName = beanClassName;
@@ -45,5 +50,9 @@ public class GenericBeanDefinition implements BeanDefinition {
     public String getBeanClassName() {
 
         return this.beanClassName;
+    }
+
+    public List<PropertyValue> getPropertyValues() {
+        return this.propertyValues;
     }
 }

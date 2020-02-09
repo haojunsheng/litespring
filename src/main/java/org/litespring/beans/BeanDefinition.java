@@ -1,5 +1,7 @@
 package org.litespring.beans;
 
+import java.util.List;
+
 /**
  * A BeanDefinition describes a bean instance, which has property values,
  * constructor argument values, and further information supplied by
@@ -51,4 +53,11 @@ public interface BeanDefinition {
      * rather only use it for parsing purposes at the individual bean definition level.
      */
     String getBeanClassName();
+    /**
+     * Return the property values to be applied to a new instance of the bean.
+     * <p>The returned instance can be modified during bean factory post-processing.
+     * @return the MutablePropertyValues object (never {@code null})
+     * Bean中的属性值
+     */
+    List<PropertyValue> getPropertyValues();
 }
