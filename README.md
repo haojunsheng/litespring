@@ -37,6 +37,12 @@ p means package，c means class，i means interface, f means function,a means ab
   - BeanDefinition(I):BeanDefinition中保存了我们的Bean信息
   - BeansException(C):Abstract superclass for all exceptions thrown in the beans package and subpackages.
   - PropertyValue(C):Object to hold information and value for an individual bean property.
+  - propertyeditors
+    - CustomNumberEditor(C):把字符串转化为整数
+    - CustomBooleanEditor(C):字符串转化为boolean值
+  - TypeConverter(I):Interface that defines type conversion methods.
+  - TypeMismatchException(C):Exception thrown on a type mismatch when trying to set a bean property.
+  - SimpleTypeConverter(C):封装了类型转换
 - context
   - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
   - support
@@ -243,19 +249,15 @@ public interface BeanDefinition {
 
 然后定义TypeConverter 接口，并定义其实现SimpleTypeConverter。
 
-
-
 5. 总结
 
 在这里，我们主要学习了Setter 注入。
 
-首先，我们引入了新的概念PropertyValue，包含RuntimeBeanReference和TypedStringValue。
+首先，我们引入了新的概念PropertyValue(来代表xml文件中的property属性)，包含RuntimeBeanReference和TypedStringValue。
 
-然后，我们用BeanDefinitionResolver去resolve相应的bean，生成实例。
+然后，我们用BeanDefinitionResolver去resolve相应的bean，生成实例，并实现setter注入。
 
 最后，我们用TypeConverter将字符的值转化为整形，Boolean值等类型。
-
-
 
 | 设计模式                              | 定义 | 备注                                                         |
 | ------------------------------------- | ---- | ------------------------------------------------------------ |
