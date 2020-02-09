@@ -23,6 +23,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - GenericBeanDefinition(c):GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
       - DefaultSingletonBeanRegistry(C):单例bean注册的通用实现
+      - ConstructorResolver(C):构造方法或者工厂类初始化bean的委托类
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
     - config
@@ -43,6 +44,7 @@ p means package，c means class，i means interface, f means function,a means ab
   - TypeConverter(I):Interface that defines type conversion methods.
   - TypeMismatchException(C):Exception thrown on a type mismatch when trying to set a bean property.
   - SimpleTypeConverter(C):封装了类型转换
+  - ConstructorArgument(C): Holder for constructor argument values, typically as part of a bean definition.
 - context
   - ApplicationContext(I):包含BeanFactory的所有功能，增加了支持不同信息源，可以访问资源，支持应用事件机制等
   - support
@@ -237,7 +239,7 @@ public interface BeanDefinition {
 
 3. 实现setter注入
 
-   拆分了getBean，独立出来createBean，createBean分为instantiateBean和populateBean，前者用来创建实例，后者用来设置属性。其中populateBean函数比较重要，使用了反射的机制，来调用相应的bean的set方法。
+   拆分了getBean，独立出来createBean，createBean分为instantiateBean和populateBean，前者用来创建实例，后者用来设置属性。其中populateBean函数比较重要，使用了反射的机制，来调用相应的bean的set方法。通过pd.getWriteMethod().invoke(bean, convertedValue)来实现的。
    
 4. 实现了TypeConverter，并在DefaultBeanFactory中调用
 
@@ -266,3 +268,32 @@ public interface BeanDefinition {
 | 替换原则（liskov）                    |      | 敏捷软件开发，原则，模式与实践                               |
 | 接口隔离原则（interface seperation）  |      | DefaultBeanFactory                                           |
 | 依赖隔离                              |      |                                                              |
+
+# 3. testcase-v3-constructor-injection
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916154546.png)
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916160145.png)
+
+注意，setter注入和构造函数注入的区别和联系。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916162429.png)
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916170604.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

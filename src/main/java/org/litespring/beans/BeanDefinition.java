@@ -60,4 +60,23 @@ public interface BeanDefinition {
      * Bean中的属性值
      */
     List<PropertyValue> getPropertyValues();
+    /**
+     * Return the constructor argument values for this bean.
+     * <p>The returned instance can be modified during bean factory post-processing.
+     * @return the ConstructorArgumentValues object (never {@code null})
+     * 构造器参数
+     */
+    ConstructorArgument getConstructorArgument();
+
+    /**
+     *
+     * @return beanID
+     */
+    String getID();
+
+    /**
+     *
+     * @return !this.constructorArgument.isEmpty();
+     */
+    boolean hasConstructorArgumentValues();
 }
