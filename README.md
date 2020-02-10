@@ -58,6 +58,10 @@ p means package，c means class，i means interface, f means function,a means ab
     - FileSystemResource:对java.io.File类型资源的封装，只要是跟File打交道的，基本上都可以使用FileSystemResource。
     - support
       - PackageResourceLoader(C):把一个package下面的class 变成resource
+  - type
+    - classreading
+      - ClassMetadataReadingVisitor(C):读取类的信息
+      - AnnotationMetadataReadingVisitor:读取注解的信息
 - stereotype
   - Component(@interface):Indicates that an annotated class is a "component".
   - Autowired(@interface):Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.
@@ -304,6 +308,8 @@ public interface BeanDefinition {
 
 
 
+ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingVisitor用于读取注解的信息。
+
 截至到现在，我们事实上已经实现了相关的功能，但是太过于底层，使用起来很不方便，下面我们的目标是进行封装。我们在**SimpleMetadataReader**中的构造函数封装了asm的基本操作。
 
 <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918171915.png" style="zoom:75%;" />
@@ -332,7 +338,12 @@ public interface BeanDefinition {
 
 #### 4.2.2.2 使用ASM读取Resource中的注解
 
-我们实现了SimpleMetadataReader，来对asm进行封装。
+我们首先实现了实现两个Visitor：
+
+- ClassMetadataReadingVisitor用于读取类的信息。
+- AnnotationMetadataReadingVisitor用于读取注解的信息。
+
+但是直接用Visitor进行操作，太麻烦。接着我们实现了SimpleMetadataReader，来对Visitor进行封装，方便的读取类的信息和类的注解。
 
 #### 4.2.2.3 创建BeanDefinition
 
