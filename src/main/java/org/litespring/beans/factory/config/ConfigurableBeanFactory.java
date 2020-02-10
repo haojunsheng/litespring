@@ -15,7 +15,7 @@ import org.litespring.beans.factory.BeanFactory;
  *
  * 提供Factory的配置功能
  */
-public interface ConfigurableBeanFactory extends BeanFactory {
+public interface ConfigurableBeanFactory extends AutowireCapableBeanFactory {
     void setBeanClassLoader(ClassLoader beanClassLoader);
     ClassLoader getBeanClassLoader();
 }

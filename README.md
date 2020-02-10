@@ -31,7 +31,11 @@ p means package，c means class，i means interface, f means function,a means ab
       - ConfigurableBeanFactory(I):提供Factory的配置功能
       - SingletonBeanRegistry(I):单例类注册
       - RuntimeBeanReference(C):Immutable placeholder class used for a property value object when it's a reference to another bean in the factory, to be resolved at runtime.
-      - TypedStringValue(C):Holder for a typed String value. Can be added to bean definitions in order to explicitly specify a target type for a String value
+      - TypedStringValue(C):Holder for a typed String value. Can be added to bean definitions in order to explicitly specify a target type for a String value.
+      - DependencyDescriptor(C):对依赖的描述符
+      - AutowireCapableBeanFactory(I):定义了bean的自动装配规则
+    - annotation
+      - InjectionMetadata(C):
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
@@ -303,6 +307,8 @@ public interface BeanDefinition {
 2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。
 3. 实现SimpleMetadataReader，封装上面两个Visitor。
 4. 实现Scanner。读取xml文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字。
+5. 实现DependencyDescriptor和InjectioMetadata。DependencyDescriptor用于描述依赖的字段，InjectioMetadata则封装了DependencyDescriptor。
+6. 
 
 在学习之前，我们需要先学习下ASM的相关知识。
 

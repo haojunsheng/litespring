@@ -79,4 +79,8 @@ public interface BeanDefinition {
      * @return !this.constructorArgument.isEmpty();
      */
     boolean hasConstructorArgumentValues();
+
+    Class<?> resolveBeanClass(ClassLoader classLoader) throws ClassNotFoundException;
+    Class<?> getBeanClass() throws IllegalStateException ;
+    boolean hasBeanClass();
 }
