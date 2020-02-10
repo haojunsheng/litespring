@@ -24,6 +24,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
       - DefaultSingletonBeanRegistry(C):单例bean注册的通用实现
       - ConstructorResolver(C):构造方法或者工厂类初始化bean的委托类
+      - BeanNameGenerator(I):Strategy interface for generating bean names for bean definitions.
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
     - config
@@ -51,6 +52,10 @@ p means package，c means class，i means interface, f means function,a means ab
     - AbstractApplicationContext(a):ApplicationContext接口的通用实现
     - ClassPathXmlApplicationContext:解析xml文件并生成bean实例
     - FileSystemXmlApplicationContext:解析xml文件并生成bean实例
+  - annotation
+    - ClassPathBeanDefinitionScanner:创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。
+    - AnnotationBeanNameGenerator:BeanNameGenerator的实现,用来生成BeanID。
+    - ScannedGenericBeanDefinition(C):扫描出来的类
 - core
   - io
     - Resource(I):Interface for a resource descriptor that abstracts from the actual type of underlying resource, such as a file or class path resource.
@@ -294,6 +299,11 @@ public interface BeanDefinition {
 
 # 4. testcase-v4-auto-scan-1
 
+1. 实现PackageResourceLoader,把一个package下面的class 变成resource。
+2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。
+3. 实现SimpleMetadataReader，封装上面两个Visitor。
+4. 实现Scanner。读取xml文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字。
+
 在学习之前，我们需要先学习下ASM的相关知识。
 
 [ASM： 一个低调成功者的自述](https://mp.weixin.qq.com/s?__biz=MzAxOTc0NzExNg==&mid=2665513528&idx=1&sn=da8b99016aeb4ede2e3c078682be0b46&chksm=80d67a7bb7a1f36dbbc3fc9b3a08ca4b9fae63dbcbd298562b9372da739d5fa4b049dec7ed33&scene=21#wechat_redirect)
@@ -334,7 +344,7 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 **把标记为@Component 的类，创建BeanDefinition**
 
-#### 4.2.2.1 实现PackageResourceLoader。
+#### 4.2.2.1 实现PackageResourceLoader
 
  把一个package下面的class 变成resource。
 

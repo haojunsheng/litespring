@@ -20,15 +20,19 @@ import java.util.List;
  *
  */
 public class GenericBeanDefinition implements BeanDefinition {
-    private String beanID;
+    private String id;
     private String beanClassName;
     private boolean singleton = true;
     private boolean prototype = false;
     private String scope = SCOPE_DEFAULT;
     private ConstructorArgument constructorArgument = new ConstructorArgument();
     List<PropertyValue> propertyValues = new ArrayList<PropertyValue>();
-    public GenericBeanDefinition(String beanID, String beanClassName) {
-        this.beanID = beanID;
+
+    public GenericBeanDefinition() {
+
+    }
+    public GenericBeanDefinition(String id, String beanClassName) {
+        this.id = id;
         this.beanClassName = beanClassName;
     }
     public boolean isSingleton() {
@@ -54,6 +58,10 @@ public class GenericBeanDefinition implements BeanDefinition {
         return this.beanClassName;
     }
 
+    public void setBeanClassName(String beanClassName) {
+        this.beanClassName = beanClassName;
+    }
+
     public List<PropertyValue> getPropertyValues() {
         return this.propertyValues;
     }
@@ -63,7 +71,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public String getID() {
-        return this.beanID;
+        return this.id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public boolean hasConstructorArgumentValues() {
