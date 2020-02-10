@@ -1,5 +1,6 @@
 package org.litespring.core.type.classreading;
 
+import org.litespring.core.type.ClassMetadata;
 import org.litespring.util.ClassUtils;
 import org.springframework.asm.ClassVisitor;
 import org.springframework.asm.Opcodes;
@@ -9,8 +10,9 @@ import org.springframework.asm.SpringAsmInfo;
  * ASM class visitor which looks only for the class name and implemented types,
  * exposing them through the {@link org.springframework.core.type.ClassMetadata}
  * interface.
- *
+ * <p>
  * 获取类的元数据信息
+ *
  * @author Rod Johnson
  * @author Costin Leau
  * @author Mark Fisher
@@ -18,7 +20,7 @@ import org.springframework.asm.SpringAsmInfo;
  * @author Chris Beams
  * @since 2.5
  */
-public class ClassMetadataReadingVisitor extends ClassVisitor /*implements ClassMetadata*/ {
+public class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata {
     private String className;
 
     private boolean isInterface;
@@ -54,12 +56,20 @@ public class ClassMetadataReadingVisitor extends ClassVisitor /*implements Class
         return this.isAbstract;
     }
 
+    public boolean isConcrete() {
+        return !(this.isInterface || this.isAbstract);
+    }
+
     public boolean isInterface() {
         return this.isInterface;
     }
 
     public boolean isFinal() {
         return this.isFinal;
+    }
+
+    public boolean hasSuperClass() {
+        return (this.superClassName != null);
     }
 
     public String getClassName() {

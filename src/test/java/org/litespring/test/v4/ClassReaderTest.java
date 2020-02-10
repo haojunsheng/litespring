@@ -2,7 +2,7 @@ package org.litespring.test.v4;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.litespring.core.annotation.AnnotationAttributes.AnnotationAttributes;
+import org.litespring.core.annotation.AnnotationAttributes;
 import org.litespring.core.io.ClassPathResource;
 import org.litespring.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.litespring.core.type.classreading.ClassMetadataReadingVisitor;

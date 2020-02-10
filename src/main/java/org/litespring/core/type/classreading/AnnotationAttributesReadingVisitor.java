@@ -1,6 +1,6 @@
 package org.litespring.core.type.classreading;
 
-import org.litespring.core.annotation.AnnotationAttributes.AnnotationAttributes;
+import org.litespring.core.annotation.AnnotationAttributes;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.SpringAsmInfo;
 

@@ -1,6 +1,7 @@
 package org.litespring.core.type.classreading;
 
-import org.litespring.core.annotation.AnnotationAttributes.AnnotationAttributes;
+import org.litespring.core.annotation.AnnotationAttributes;
+import org.litespring.core.type.AnnotationMetadata;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.Type;
 
@@ -14,18 +15,19 @@ import java.util.Set;
  * ASM class visitor which looks for the class name and implemented types as
  * well as for the annotations defined on the class, exposing them through
  * the {@link org.springframework.core.type.AnnotationMetadata} interface.
- *
+ * <p>
  * 读取注解的信息
+ *
  * @author Juergen Hoeller
  * @author Mark Fisher
  * @author Costin Leau
  * @since 2.5
  */
-public class AnnotationMetadataReadingVisitor extends ClassMetadataReadingVisitor /*implements  AnnotationMetadata */{
+public class AnnotationMetadataReadingVisitor extends ClassMetadataReadingVisitor implements AnnotationMetadata {
     private final Set<String> annotationSet = new LinkedHashSet<String>(4);
     private final Map<String, AnnotationAttributes> attributeMap = new LinkedHashMap<String, AnnotationAttributes>(4);
 
-    public AnnotationMetadataReadingVisitor(){
+    public AnnotationMetadataReadingVisitor() {
 
     }
 
@@ -36,6 +38,7 @@ public class AnnotationMetadataReadingVisitor extends ClassMetadataReadingVisito
         this.annotationSet.add(className);
         return new AnnotationAttributesReadingVisitor(className, this.attributeMap);
     }
+
     public Set<String> getAnnotationTypes() {
         return this.annotationSet;
     }

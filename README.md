@@ -62,6 +62,8 @@ p means package，c means class，i means interface, f means function,a means ab
     - classreading
       - ClassMetadataReadingVisitor(C):读取类的信息
       - AnnotationMetadataReadingVisitor:读取注解的信息
+      - MetadataReader:Simple facade for accessing class metadata.
+      - SimpleMetadataReader:MetadataReader的实现
 - stereotype
   - Component(@interface):Indicates that an annotated class is a "component".
   - Autowired(@interface):Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.

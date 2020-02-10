@@ -1,4 +1,4 @@
-package org.litespring.core.annotation.AnnotationAttributes;
+package org.litespring.core.annotation;
 
 import org.litespring.util.Assert;
 
