@@ -56,6 +56,11 @@ p means package，c means class，i means interface, f means function,a means ab
     - Resource(I):Interface for a resource descriptor that abstracts from the actual type of underlying resource, such as a file or class path resource.
     - ClassPathResource:Uses either a given ClassLoader or a given Class for loading resources.
     - FileSystemResource:对java.io.File类型资源的封装，只要是跟File打交道的，基本上都可以使用FileSystemResource。
+    - support
+      - PackageResourceLoader(C):把一个package下面的class 变成resource
+- stereotype
+  - Component(@interface):Indicates that an annotated class is a "component".
+  - Autowired(@interface):Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.
 
 ## 1.1 介绍Spring IoC, AOP
 
@@ -279,11 +284,115 @@ public interface BeanDefinition {
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916162429.png)
 
-
-
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916170604.png)
 
+# 4. testcase-v4-auto-scan-1
 
+在学习之前，我们需要先学习下ASM的相关知识。
+
+[ASM： 一个低调成功者的自述](https://mp.weixin.qq.com/s?__biz=MzAxOTc0NzExNg==&mid=2665513528&idx=1&sn=da8b99016aeb4ede2e3c078682be0b46&chksm=80d67a7bb7a1f36dbbc3fc9b3a08ca4b9fae63dbcbd298562b9372da739d5fa4b049dec7ed33&scene=21#wechat_redirect)
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152658.png)
+
+访问者模式Visitor：
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152742.png)
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152810.png)
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918171740.png)
+
+
+
+截至到现在，我们事实上已经实现了相关的功能，但是太过于底层，使用起来很不方便，下面我们的目标是进行封装。我们在**SimpleMetadataReader**中的构造函数封装了asm的基本操作。
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918171915.png" style="zoom:75%;" />
+
+## 4.1 java注解
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918151949.png)
+
+
+
+[java注解](https://mp.weixin.qq.com/s?__biz=MzAxOTc0NzExNg==&mid=2665513930&idx=1&sn=f1f345124124958ca798460839cbbd17&chksm=80d67b89b7a1f29f18b099c7e57c117a050be6dc9575b780bef8706d4749fd648ba4e11c0a79&scene=21#wechat_redirect)
+
+## 4.2 思路
+
+### 4.2.1 读取XML文件
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183830.png)
+
+### 4.2.2 扫描指定的包
+
+**把标记为@Component 的类，创建BeanDefinition**
+
+#### 4.2.2.1 实现PackageResourceLoader。
+
+ 把一个package下面的class 变成resource。
+
+#### 4.2.2.2 使用ASM读取Resource中的注解
+
+我们实现了SimpleMetadataReader，来对asm进行封装。
+
+#### 4.2.2.3 创建BeanDefinition
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190929162203.png" style="zoom:50%;" />
+
+本质上我们生成了BeanDefinition。我们为了避免污染GenericBeanDefinition，所以我们专门定义一个新的接口AnnotatedBeanDefinition，用来表示扫描出来的类，最后我们让ScannedGenericBeanDefinition来表示扫描出来的类的信息。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183542.png)
+
+我们在之前的操作中，在xml文件中都是定义了BeanID的，形如<bean id="itemDao" class="org.litespring.dao.v3.ItemDao">这种，我们利用BeanFactory中提供的getBean(String beanID)方法就可以得到bean的实例。但是我们现在是没有BeanID的，为了得到实例，我们定义了BeanNameGenerator接口来处理这个问题，其对应实现为AnnotationBeanNameGenerator。AnnotationBeanNameGenerator的思路是：判断被@Component标记的字段有无value属性，如果有，则把value的值返回；如果没有，则把该字段的首字母变为小写，作为beanID返回。如AccountDao变为accountDao作为BeanID。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183852.png)
+
+综上：我们使用ClassPathBeanDefinitionScanner从包下获得BeanDefinition，使用ScannedGenericBeanDefinition获得元数据。
+
+### 4.2.3 根据BeanDefinition创建Bean的实例，并注入
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110904.png)
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110940.png)
+
+DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段的描述，对于MethodParameter用于构造函数和set函数的情况，如上图，我们没有进行实现。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930111521.png)
+
+为了实现接口最小化的原则，我们并不想把resolveDependency()接口放在BeanFactory接口中，所以我们设计了如下的继承体系。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930112543.png)
+
+下面我们进行封装。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930115841.png)
+
+事实上，我们通过InjectionMetadata来获取还是十分麻烦的，下面我们进行进一步的封装。我们实现了AutowiredAnnotationProcessor，来封装了InjectionMetadata。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152626.png)
+
+
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152901.png" style="zoom:80%;" />
+
+    ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153323.png)
+
+
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153605.png" style="zoom:80%;" />
+
+
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930154219.png" style="zoom:80%;" />
+
+
+
+
+
+我们首先使用DependencyDescriptor来获取对某个字段的描述。然后在DefaultBeanFactory中通过resolveDependency(Depen dencyDescriptor descriptor)来把标记为@Autowired的字段进行实例化。
+
+然后我们使用new AutowiredFieldElement(Field f,boolean required,AutowireCapableBeanFactory factory)的方式创建注解的元素，然后使用new InjectionMetadata(clz,elements)创建了实例，最后使用metadata.inject(Object target)把meta注入到target对象中。
 
 
 
