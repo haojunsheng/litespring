@@ -297,7 +297,7 @@ public interface BeanDefinition {
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916170604.png)
 
-# 4. testcase-v4-auto-scan-1
+# 4. testcase-v4-auto-scan
 
 1. 实现PackageResourceLoader,把一个package下面的class 变成resource。
 2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。
