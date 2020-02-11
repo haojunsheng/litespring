@@ -79,6 +79,11 @@ p means package，c means class，i means interface, f means function,a means ab
 - stereotype
   - Component(@interface):Indicates that an annotated class is a "component".
   - Autowired(@interface):Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.
+- aop
+  - Pointcut(I):切入点，定义了哪些连接点需要被织入需要被织入横切逻辑
+  - MethodMatcher(I):该接口定义了静态方法匹配器和动态方法匹配器
+  - aspectj
+    - AspectJExpressionPointcut(C):uses the AspectJ weaver to evaluate a pointcut expression.
 
 ## 1.1 介绍Spring IoC, AOP
 
@@ -480,7 +485,68 @@ Types of advice:
 - *After (finally) advice*: Advice to be executed regardless of the means by which a join point exits (normal or exceptional return).
 - *Around advice*: Advice that surrounds a join point such as a method invocation. This is the most powerful kind of advice. Around advice can perform custom behavior before and after the method invocation. It is also responsible for choosing whether to proceed to the join point or to shortcut the advised method execution by returning its own return value or throwing an exception.
 
-**给定一个类的方法，看是否符合pointcut的表达式。**
+aop的基本概念是上面这些，接着我们来看pointcut。我们需要使用一个类来表示下图中的<aop:poincut id="">。同时我们还需要**给定一个类的方法，看是否符合pointcut的表达式，**所以我们抽象出了MethodMatcher来表示。关系如下所示：
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191001161842.png" style="zoom:33%;" />
+
+我们定义了AspectJExpressionPointcut，来实现了PoinCut和MethodMatcher接口。 
+
+1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
+2. 
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191001162012.png)
+
+
+
+MethodLocatingFactory用来定位Method，根据bean的名字和方法名，我们尝试使用MethodLocatingFactory来生成该bean的字节码。
+
+用于获取需要注入的类（如日志，事物）的方法,是advice。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006211427.png)
+
+下面我们实现拦截器。
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006223448.png)
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006223519.png)
+
+
+
+下面我们将把CGLIB和链式拦截器调用进行结合,实现AopProxyFactory。
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007160648.png)
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007161342.png)
+
+<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007161602.png" style="zoom:67%;" />
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007162149.png)
+
+
+
+
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007163620.png)
+
+
+
+
+
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007163739.png)
+
+
+
+
 
 
 
