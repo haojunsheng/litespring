@@ -36,6 +36,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - AutowireCapableBeanFactory(I):定义了bean的自动装配规则
     - annotation
       - InjectionMetadata(C):
+      - AutowiredAnnotationProcessor(C):封装了InjectionMetadata
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
     - BeanDefinitionStoreException(C): Exception thrown when a BeanFactory encounters an invalid bean definition:
@@ -405,7 +406,7 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152901.png" style="zoom:80%;" />
 
-    ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153323.png)
+![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153323.png)
 
 
 
