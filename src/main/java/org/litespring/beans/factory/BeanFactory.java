@@ -75,4 +75,21 @@ import org.litespring.beans.BeanDefinition;
      * 根据名字获取Bean的实例
      */
     Object getBean(String beanID);
+    /**
+     * Determine the type of the bean with the given name. More specifically,
+     * determine the type of object that {@link #getBean} would return for the given name.
+     * <p>For a {@link FactoryBean}, return the type of object that the FactoryBean creates,
+     * as exposed by {@link FactoryBean#getObjectType()}.
+     * <p>Translates aliases back to the corresponding canonical bean name.
+     * Will ask the parent factory if the bean cannot be found in this factory instance.
+     * @param name the name of the bean to query
+     * @return the type of the bean, or {@code null} if not determinable
+     * @throws NoSuchBeanDefinitionException if there is no bean with the given name
+     * @since 1.1.2
+     * @see #getBean
+     * @see #isTypeMatch
+     * 获取指定名字的bean的类型，对于FactoryBean来说，返回的是FactoryBean创建的对象的类型，也就是FactoryBean的getObjectType
+     */
+    Class<?> getType(String name) throws NoSuchBeanDefinitionException;
+
 }

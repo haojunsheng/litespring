@@ -84,6 +84,8 @@ p means package，c means class，i means interface, f means function,a means ab
   - MethodMatcher(I):该接口定义了静态方法匹配器和动态方法匹配器
   - aspectj
     - AspectJExpressionPointcut(C):uses the AspectJ weaver to evaluate a pointcut expression.
+  - config
+    - MethodLocatingFactory(C):根据bean的名字和方法名，定位到Method.
 
 ## 1.1 介绍Spring IoC, AOP
 
@@ -91,13 +93,13 @@ Spring 的本质系列(1) -- [依赖注入](https://mp.weixin.qq.com/s?__biz=MzA
 
 IoC（Inversion of Control，控制反转）和DI（(Dependency Injection，依赖注入）是一个含义。
 
-[![img](https://github.com/anapodoton/ImageHost/raw/master/img/20190908124732.png?raw=trueraw=true)](https://github.com/anapodoton/ImageHost/blob/master/img/20190908124732.png?raw=trueraw=true)
+<img src="img/image-20200211220945089.png" alt="image-20200211220945089" style="zoom:25%;" />
 
 Spring本质系列(2)-[AOP](https://mp.weixin.qq.com/s?__biz=MzAxOTc0NzExNg==&mid=2665513187&idx=1&sn=f603eee3e798e79ce010c9d58cd2ecf3&scene=21#wechat_redirect)
 
 AOP（Aspect Oriented Programming）
 
-[![img](https://github.com/anapodoton/ImageHost/raw/master/img/20190908124824.png?raw=trueraw=true)](https://github.com/anapodoton/ImageHost/blob/master/img/20190908124824.png?raw=trueraw=true)
+![image-20200211221057082](img/image-20200211221057082.png)
 
 ## 1.2 介绍TDD开发方式， 重构的方法
 
@@ -124,43 +126,43 @@ AOP（Aspect Oriented Programming）
 
 1. 首先实现了DefaultBeanFactory，然后引入异常处理。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908125102.png)
+![](img/20190908125102.png)
 
 2. 然后由 [SRP，单一职责原则]，需要将DefaultBeanFactory进行拆解。将读取解析xml文件的功能拆分出去。首先想到的是在接口BeanFactory中新增registerBeanDefinition(),其对应实现为XMLBeanDefinitionReader 。这样DefaultBeanFactory负责生成实例，XMLBeanDefinitionReader负责读取并解析xml。如下图所示：
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908151908.png?raw=true)
+![](img/20190908151908.png)
 
 3. 但是现在还存在问题，为了安全考虑，我们不想把getBeanDefinition()和registerBeanDefinition()暴露给用户使用，所以我们重新定义了BeanDefinitionRegistry接口，如下图所示：
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908152802.png?raw=true)
+![](img/20190908152802.png)
 
 4. 事实上，上面还是显得略为麻烦，我们希望传入beanID就可以得到bean的实例，下面我们将定义一个接口，ApplicationContext，其对应实现为ClassPathXmlApplicationContext。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908155522.png)
+![](img/20190908155522.png)
 
 5. 下面我们继续进行抽象，我们需要**判断传入的配置文件是否真的存在**(请注意，这个是支路，不是主干)。我们既可以从ClassPathResource读取配置文件（借助于ClassLoader），也可以从FileSystemResource(借助于FileSystem)配置文件，所以我们定义一个Resource接口，及其两个实现ClassPathResource和FileSystemResource，如下图所示：
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908162024.png?raw=true)
+![](img/20190908162024.png)
 
 6. 下面我们需要把Resource提取出来，进行代码的重构，主要修改XmlBeanDefinitionReader。
 
 7. 下面我们需要回到主干，接着看ApplicationContext相关的。实现FileSystemXMLApplicationContext和，关系图如下所示：
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908162935.png?raw=true)
+![](img/20190908162935.png)
 
 8. 但是我们发现FileSystemXMLApplicationContext和ClassPathXmlApplicationContext有很多重复的方法，回想起我们学习过的设计模式中的  【模板方法】，可以完美的解决该问题。我们可以定义一个抽象类AbstractApplicationContext，FileSystemXMLApplicationContext和ClassPathXmlApplicationContext为其子类，关系如下所示：
 
-   ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908170723.png?raw=true)
+   ![](img/20190908170723.png)
 
    
 
 9. 上面的实现中，我们的ClassLoader都是获取的默认的，不支持用户来传入，下面我们来进行优化，支持用户传入一个ClassLoader。我们最开始是想把setBeanClassLoader放在BeanFactory接口中，但是这样不是很好，频繁使用的接口，最好只有get方法，尽量少的set方法。所以，我们定义了一个接口，ConfigurableBeanFactory。关系如下图所示：
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908211924.png)
+![](img/20190908211924.png)
 
 指的注意的是，Spring的实现和我们是有所不同的，Spring还提供ResourceLoader的功能，具体见下图所示：
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190908212423.png)
+![](img/20190908212423.png)
 
 10. 实现scope。Spring中的scope的含义如下：
 
@@ -172,11 +174,11 @@ AOP（Aspect Oriented Programming）
     | session        |                        |
     | global session |                        |
 
-    ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908220737.png?raw=true)
+    ![](img/20190908220737.png)
 
 下面引入单例的实现：
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908222038.png?raw=true)
+![](img/20190908222038.png)
 
 我们首先重新定义了BeanDefinition，并且让GenericBeanDefinition实现了BeanDefinition 接口，，实现了接口中的方法。
 
@@ -205,7 +207,7 @@ public interface BeanDefinition {
 
 11. 总结
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908223028.png?raw=true)
+![](img/20190908223028.png)
 
 ![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908223201.png?raw=true)
 
@@ -249,13 +251,13 @@ public interface BeanDefinition {
 
    我们要表达petstore-v2.xml中的property属性，为此引入了PropertyValue来表示property属性。
    
-   ![](https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200209151219.png)
+   ![](img/20200209151219.png)
 
 我们使用PropertyValue来表示property属性。值得注意的是，值分为两种，一种是引用，另外一种是值，所以我们需要getPropertyValues方法把reference进行转换。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190909182040.png)
+![](img/20190909182040.png)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190909181258.png)
+![](img/20190909181258.png)
 
 在BeanDefinition中定义了getPropertyValues接口，在GenericBeanDefinition中实现了该方法。
 
@@ -275,7 +277,7 @@ public interface BeanDefinition {
 
    我们首先创建CustomNumberEditorTest和CustomBooleanEditorTest，并且实现CustomNumberEditor和CustomBooleanEditor。
 
-   ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190910115828.png)
+   ![](img/20190910115828.png)
 
 然后定义TypeConverter 接口，并定义其实现SimpleTypeConverter。
 
@@ -299,15 +301,15 @@ public interface BeanDefinition {
 
 # 3. constructor-injection
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916154546.png)
+![](img/20190916154546.png)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916160145.png)
+![](img/20190916160145.png)
 
 注意，setter注入和构造函数注入的区别和联系。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916162429.png)
+![](img/20190916162429.png)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916170604.png)
+![](img/20190916170604.png)
 
 # 4. auto-scan
 
@@ -323,15 +325,15 @@ public interface BeanDefinition {
 
 [ASM： 一个低调成功者的自述](https://mp.weixin.qq.com/s?__biz=MzAxOTc0NzExNg==&mid=2665513528&idx=1&sn=da8b99016aeb4ede2e3c078682be0b46&chksm=80d67a7bb7a1f36dbbc3fc9b3a08ca4b9fae63dbcbd298562b9372da739d5fa4b049dec7ed33&scene=21#wechat_redirect)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152658.png)
+![](img/20190918152658.png)
 
 访问者模式Visitor：
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152742.png)
+![](img/20190918152742.png)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918152810.png)
+![](img/20190918152810.png)
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918171740.png)
+![](img/20190918171740.png)
 
 
 
@@ -339,11 +341,11 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 截至到现在，我们事实上已经实现了相关的功能，但是太过于底层，使用起来很不方便，下面我们的目标是进行封装。我们在**SimpleMetadataReader**中的构造函数封装了asm的基本操作。
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918171915.png" style="zoom:75%;" />
+<img src="img/20190918171915.png" style="zoom:75%;" />
 
 ## 4.1 java注解
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918151949.png)
+![](img/20190918151949.png)
 
 
 
@@ -353,7 +355,7 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 ### 4.2.1 读取XML文件
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183830.png)
+![](img/20190918183830.png)
 
 ### 4.2.2 扫描指定的包
 
@@ -374,57 +376,57 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 #### 4.2.2.3 创建BeanDefinition
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190929162203.png" style="zoom:50%;" />
+<img src="img/20190929162203.png" style="zoom:50%;" />
 
 本质上我们生成了BeanDefinition。我们为了避免污染GenericBeanDefinition，所以我们专门定义一个新的接口AnnotatedBeanDefinition，用来表示扫描出来的类，最后我们让ScannedGenericBeanDefinition来表示扫描出来的类的信息。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183542.png)
+![](img/20190918183542.png)
 
 我们在之前的操作中，在xml文件中都是定义了BeanID的，形如<bean id="itemDao" class="org.litespring.dao.v3.ItemDao">这种，我们利用BeanFactory中提供的getBean(String beanID)方法就可以得到bean的实例。但是我们现在是没有BeanID的，为了得到实例，我们定义了BeanNameGenerator接口来处理这个问题，其对应实现为AnnotationBeanNameGenerator。AnnotationBeanNameGenerator的思路是：判断被@Component标记的字段有无value属性，如果有，则把value的值返回；如果没有，则把该字段的首字母变为小写，作为beanID返回。如AccountDao变为accountDao作为BeanID。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190918183852.png)
+![](img/20190918183852.png)
 
 综上：我们使用ClassPathBeanDefinitionScanner从包下获得BeanDefinition，使用ScannedGenericBeanDefinition获得元数据。
 
 ### 4.2.3 根据BeanDefinition创建Bean的实例，并注入
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110904.png)
+![](img/20190930110904.png)
 
 上面我们处理了@Component注解，下面我们来处理@Autowired注解。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110940.png)
+![](img/20190930110940.png)
 
 DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段的描述，对于MethodParameter用于构造函数和set函数的情况，如上图，我们没有进行实现。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930111521.png)
+![](img/20190930111521.png)
 
 为了实现接口最小化的原则，我们并不想把resolveDependency()接口放在BeanFactory接口中，所以我们设计了如下的继承体系。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930112543.png)
+![](img/20190930112543.png)
 
 下面我们进行封装。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930115841.png)
+![](img/20190930115841.png)
 
 事实上，我们通过InjectionMetadata来获取还是十分麻烦的，下面我们进行进一步的封装。我们实现了AutowiredAnnotationProcessor，来封装了InjectionMetadata。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152626.png)
+![](img/20190930152626.png)
 
 到这里，我们终于完成了所有的准备工作，下面可以开始使用了。
 
 我们需要先了解下bean的生命周期。
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152901.png" style="zoom:80%;" />
+<img src="img/20190930152901.png" style="zoom:80%;" />
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153323.png)
-
-
-
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930153605.png" style="zoom:80%;" />
+![](img/20190930153323.png)
 
 
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930154219.png" style="zoom:80%;" />
+<img src="img/20190930153605.png" style="zoom:80%;" />
+
+
+
+<img src="img/20190930154219.png" style="zoom:80%;" />
 
 我们首先使用DependencyDescriptor来获取对某个字段的描述。然后在DefaultBeanFactory中通过resolveDependency(Depen dencyDescriptor descriptor)来把标记为@Autowired的字段进行实例化。
 
@@ -436,9 +438,9 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 首先我们看下，**为什么要实现aop技术**？如下图所示，我们的用户管理，订单管理，支付管理，可能都需要日志，安全这些功能，在传统的实现中，一旦日志中的代码修改，那么我们的用户管理，订单管理都需要修改，这是不符合实际的，我们希望，日志，安全的修改不影响我们的业务代码，我们希望使用**xml或者注解**的形式，来配置二者之间的关系。
 
-<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211202114.png" style="zoom:50%;" />
+<img src="img/20200211202114.png" style="zoom:50%;" />
 
-<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204100.png" style="zoom:50%;" />
+<img src="img/20200211204100.png" style="zoom:50%;" />
 
 我们接着来看**如何实现aop**？
 
@@ -446,11 +448,11 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 第二种方案是在运行期来做手脚。运行时来动态生成类，问题在于java字节码一旦装入方法区就无法修改，我们如何进行增强呢？一种方案是使用**继承**的技术。在运行时动态生成一个类，继承待增强的类。另外一种方案是使用**动态代理**的技术，定义一个借口，然后实现其兄弟类来实现。
 
-<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204344.png" style="zoom:50%;" />
+<img src="img/20200211204344.png" style="zoom:50%;" />
 
-<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204546.png" style="zoom: 33%;" />
+<img src="img/20200211204546.png" style="zoom: 33%;" />
 
-<img src="https://tva1.sinaimg.cn/large/0082zybply1gbsr8fyv79j313g0nwqcs.jpg" alt="image-20200211204955382" style="zoom: 25%;" />
+<img src="img/0082zybply1gbsr8fyv79j313g0nwqcs.jpg" alt="image-20200211204955382" style="zoom: 25%;" />
 
 接下来我们还需要复习AOP的术语：
 
@@ -465,7 +467,7 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
   和Join point相匹配。**pointCut形如PetStoreService的placeOrder()方法。**
 
-  <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007180127.png" style="zoom:50%;" />
+  <img src="img/20191007180127.png" style="zoom:50%;" />
 
 - *Advice*: action taken by an aspect at a particular join point. Different types of advice include "around," "before" and "after" advice. (Advice types are discussed below.) Many AOP frameworks, including Spring, model an advice as an *interceptor*, maintaining a chain of interceptors *around* the join point.类似于拦截器的作用。
 
@@ -487,30 +489,32 @@ Types of advice:
 
 aop的基本概念是上面这些，接着我们来看pointcut。我们需要使用一个类来表示下图中的<aop:poincut id="">。同时我们还需要**给定一个类的方法，看是否符合pointcut的表达式，**所以我们抽象出了MethodMatcher来表示。关系如下所示：
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191001161842.png" style="zoom:33%;" />
+<img src="img/20191001161842.png" style="zoom:33%;" />
 
 我们定义了AspectJExpressionPointcut，来实现了PoinCut和MethodMatcher接口。 
 
 1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
-2. 
+2. 实现MethodLocatingFactory。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191001162012.png)
+<img src="img/20191001162012.png" style="zoom:33%;" />
 
+<img src="img/image-20200211220322915.png" alt="image-20200211220322915" style="zoom:33%;" />
 
+接着我们来看另外的点。MethodLocatingFactory用来定位Method，根据bean的名字和方法名，定位到这个Method，然后通过反射调用。
 
-MethodLocatingFactory用来定位Method，根据bean的名字和方法名，我们尝试使用MethodLocatingFactory来生成该bean的字节码。
+<img src="img/image-20200211221731468.png" alt="image-20200211221731468" style="zoom: 33%;" />
 
 用于获取需要注入的类（如日志，事物）的方法,是advice。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006211427.png)
+![](img/20191006211427.png)
 
 下面我们实现拦截器。
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006223448.png)
+![](img/20191006223448.png)
 
 
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191006223519.png)
+![](img/20191006223519.png)
 
 
 
@@ -518,31 +522,31 @@ MethodLocatingFactory用来定位Method，根据bean的名字和方法名，我�
 
 
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007160648.png)
+![](img/20191007160648.png)
 
 
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007161342.png)
+![](img/20191007161342.png)
 
-<img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007161602.png" style="zoom:67%;" />
-
-
-
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007162149.png)
+<img src="img/20191007161602.png" style="zoom:67%;" />
 
 
 
-
-
-
-
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007163620.png)
+![](img/20191007162149.png)
 
 
 
 
 
-![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007163739.png)
+
+
+![](img/20191007163620.png)
+
+
+
+
+
+![](img/20191007163739.png)
 
 
 

@@ -80,7 +80,19 @@ public interface BeanDefinition {
      */
     boolean hasConstructorArgumentValues();
 
+    /**
+     * 生成bean的字节码
+     * @param classLoader
+     * @return
+     * @throws ClassNotFoundException
+     */
     Class<?> resolveBeanClass(ClassLoader classLoader) throws ClassNotFoundException;
+
+    /**
+     * 获取bean的字节码
+     * @return
+     * @throws IllegalStateException
+     */
     Class<?> getBeanClass() throws IllegalStateException ;
     boolean hasBeanClass();
 }
