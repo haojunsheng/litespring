@@ -1,5 +1,7 @@
 package org.litespring.context.support;
 
+import org.litespring.beans.factory.annotation.AutowiredAnnotationProcessor;
+import org.litespring.beans.factory.config.ConfigurableBeanFactory;
 import org.litespring.beans.factory.support.DefaultBeanFactory;
 import org.litespring.beans.factory.xml.XmlBeanDefinitionReader;
 import org.litespring.context.ApplicationContext;
@@ -33,7 +35,7 @@ import org.litespring.core.io.Resource;
  * (supporting full class path resource names that include the package path,
  * e.g. "mypackage/myresource.dat"), unless the {@link #getResourceByPath}
  * method is overwritten in a subclass.
- *
+ * <p>
  * ApplicationContext接口的通用实现
  * 设计模式中的【模板方法】，可以把FileSystemXMLApplicationContext和ClassPathXmlApplicationContext
  * 中的公共方法提取出来
@@ -43,13 +45,22 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
     private DefaultBeanFactory factory = null;
     private ClassLoader beanClassLoader;
 
-    public AbstractApplicationContext(String configFile){
-        factory=new DefaultBeanFactory();
+    public AbstractApplicationContext(String configFile) {
+        factory = new DefaultBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
         Resource resource = this.getResourceByPath(configFile);
         reader.loadBeanDefinitions(resource);
         factory.setBeanClassLoader(this.getBeanClassLoader());
+        registerBeanPostProcessors(factory);
     }
+
+    protected void registerBeanPostProcessors(ConfigurableBeanFactory beanFactory) {
+
+        AutowiredAnnotationProcessor postProcessor = new AutowiredAnnotationProcessor();
+        postProcessor.setBeanFactory(beanFactory);
+        beanFactory.addBeanPostProcessor(postProcessor);
+    }
+
     public Object getBean(String beanID) {
 
         return factory.getBean(beanID);

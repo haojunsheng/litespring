@@ -13,10 +13,8 @@ import org.litespring.dao.v4.AccountDao;
 import org.litespring.service.v4.PetStoreService;
 
 public class DependencyDescriptorTest {
-
     @Test
     public void testResolveDependency() throws Exception {
-
         DefaultBeanFactory factory = new DefaultBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
         Resource resource = new ClassPathResource("petstore-v4.xml");

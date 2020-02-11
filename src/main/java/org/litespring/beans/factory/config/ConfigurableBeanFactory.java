@@ -1,6 +1,9 @@
 package org.litespring.beans.factory.config;
 
 import org.litespring.beans.factory.BeanFactory;
+
+import java.util.List;
+
 /**
  * Configuration interface to be implemented by most bean factories. Provides
  * facilities to configure a bean factory, in addition to the bean factory
@@ -12,10 +15,15 @@ import org.litespring.beans.factory.BeanFactory;
  * {@link org.springframework.beans.factory.ListableBeanFactory} for typical
  * needs. This extended interface is just meant to allow for framework-internal
  * plug'n'play and for special access to bean factory configuration methods.
- *
+ * <p>
  * 提供Factory的配置功能
  */
 public interface ConfigurableBeanFactory extends AutowireCapableBeanFactory {
     void setBeanClassLoader(ClassLoader beanClassLoader);
+
     ClassLoader getBeanClassLoader();
+
+    void addBeanPostProcessor(BeanPostProcessor postProcessor);
+
+    List<BeanPostProcessor> getBeanPostProcessors();
 }

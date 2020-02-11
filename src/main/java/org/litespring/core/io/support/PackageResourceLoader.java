@@ -35,6 +35,12 @@ public class PackageResourceLoader {
         return this.classLoader;
     }
 
+    /**
+     *
+     * @param basePackage
+     * @return
+     * @throws IOException
+     */
     public Resource[] getResources(String basePackage) throws IOException {
         Assert.notNull(basePackage, "basePackage  must not be null");
         String location = ClassUtils.convertClassNameToResourcePath(basePackage);
@@ -52,7 +58,6 @@ public class PackageResourceLoader {
     }
 
     /**
-     *
      * @param rootDir
      * @return
      * @throws IOException
@@ -94,6 +99,7 @@ public class PackageResourceLoader {
 
     /**
      * 很简单，如果是文件，则添加到集合中，如果是文件夹，则进行递归处理
+     *
      * @param dir
      * @param result
      */

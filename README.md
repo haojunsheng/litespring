@@ -34,8 +34,10 @@ p means package，c means class，i means interface, f means function,a means ab
       - TypedStringValue(C):Holder for a typed String value. Can be added to bean definitions in order to explicitly specify a target type for a String value.
       - DependencyDescriptor(C):对依赖的描述符
       - AutowireCapableBeanFactory(I):定义了bean的自动装配规则
+      - BeanPostProcessor(I):可以在bean初始化前后做操作
+      - InstantiationAwareBeanPostProcessor(C):对bean的实例化做一些操作
     - annotation
-      - InjectionMetadata(C):
+      - InjectionMetadata(C):Internal class for managing injection metadata.
       - AutowiredAnnotationProcessor(C):封装了InjectionMetadata
     - BeanFactory(I):The root interface for accessing a Spring bean container
     - BeanCreationException(C):Exception thrown when a BeanFactory encounters an error when attempting to create a bean from a bean definition.
@@ -305,11 +307,12 @@ public interface BeanDefinition {
 # 4. testcase-v4-auto-scan
 
 1. 实现PackageResourceLoader,把一个package下面的class 变成resource。
-2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。
+2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。(使用ASM读取类的Metadata)
 3. 实现SimpleMetadataReader，封装上面两个Visitor。
-4. 实现Scanner。读取xml文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字。
-5. 实现DependencyDescriptor和InjectioMetadata。DependencyDescriptor用于描述依赖的字段，InjectioMetadata则封装了DependencyDescriptor。
-6. 
+4. 实现Scanner。读取xml文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字(给auto-scan的Bean 命名： BeanNameGenerator)。
+5. 实现DependencyDescriptor和InjectioMetadata。DependencyDescriptor用于描述依赖的字段，InjectioMetadata则把注入到targetClass中。
+6. 实现AutowiredAnnotationProcessor，可以方便的创建InjectioMetadata。(用AutowiredAnnotationProcessor实现注入)
+7. 实现BeanPostProcessor。
 
 在学习之前，我们需要先学习下ASM的相关知识。
 
@@ -382,7 +385,7 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110904.png)
 
-
+上面我们处理了@Component注解，下面我们来处理@Autowired注解。
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930110940.png)
 
@@ -402,7 +405,9 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152626.png)
 
+到这里，我们终于完成了所有的准备工作，下面可以开始使用了。
 
+我们需要先了解下bean的生命周期。
 
 <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930152901.png" style="zoom:80%;" />
 
@@ -415,10 +420,6 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 
 <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20190930154219.png" style="zoom:80%;" />
-
-
-
-
 
 我们首先使用DependencyDescriptor来获取对某个字段的描述。然后在DefaultBeanFactory中通过resolveDependency(Depen dencyDescriptor descriptor)来把标记为@Autowired的字段进行实例化。
 

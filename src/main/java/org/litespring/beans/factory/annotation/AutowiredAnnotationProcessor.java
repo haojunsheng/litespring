@@ -9,7 +9,10 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.litespring.beans.BeansException;
+import org.litespring.beans.factory.BeanCreationException;
 import org.litespring.beans.factory.config.AutowireCapableBeanFactory;
+import org.litespring.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.litespring.core.annotation.AnnotationUtils;
 import org.litespring.stereotype.Autowired;
 import org.litespring.util.ReflectionUtils;
@@ -55,7 +58,7 @@ import org.litespring.util.ReflectionUtils;
  * 使用<context:annotation-config/>和<context:component-scan/>标签，
  * 或注册默认的AutowiredAnnotationBeanPostProcessor
  */
-public class AutowiredAnnotationProcessor {
+public class AutowiredAnnotationProcessor implements InstantiationAwareBeanPostProcessor {
 
     private AutowireCapableBeanFactory beanFactory;
     private String requiredParameterName = "required";
@@ -103,6 +106,34 @@ public class AutowiredAnnotationProcessor {
         while (targetClass != null && targetClass != Object.class);
 
         return new InjectionMetadata(clazz, elements);
+    }
+
+    public Object beforeInitialization(Object bean, String beanName) throws BeansException {
+        //do nothing
+        return bean;
+    }
+
+    public Object afterInitialization(Object bean, String beanName) throws BeansException {
+        // do nothing
+        return bean;
+    }
+
+    public Object beforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
+        return null;
+    }
+
+    public boolean afterInstantiation(Object bean, String beanName) throws BeansException {
+        // do nothing
+        return true;
+    }
+
+    public void postProcessPropertyValues(Object bean, String beanName) throws BeansException {
+        InjectionMetadata metadata = buildAutowiringMetadata(bean.getClass());
+        try {
+            metadata.inject(bean);
+        } catch (Throwable ex) {
+            throw new BeanCreationException(beanName, "Injection of autowired dependencies failed", ex);
+        }
     }
 
     /**

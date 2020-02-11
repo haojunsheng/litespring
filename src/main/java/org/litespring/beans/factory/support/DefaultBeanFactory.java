@@ -4,23 +4,17 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.litespring.beans.PropertyValue;
 import org.litespring.beans.SimpleTypeConverter;
 import org.litespring.beans.factory.BeanCreationException;
-import org.litespring.beans.factory.BeanDefinitionStoreException;
-import org.litespring.beans.factory.BeanFactory;
 import org.litespring.beans.BeanDefinition;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
+import org.litespring.beans.factory.config.BeanPostProcessor;
 import org.litespring.beans.factory.config.ConfigurableBeanFactory;
 import org.litespring.beans.factory.config.DependencyDescriptor;
+import org.litespring.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.litespring.util.ClassUtils;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,10 +26,19 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
     private ClassLoader beanClassLoader;
+    private List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+
     SimpleTypeConverter converter = new SimpleTypeConverter();
 
     public DefaultBeanFactory() {
 
+    }
+
+    public void addBeanPostProcessor(BeanPostProcessor postProcessor){
+        this.beanPostProcessors.add(postProcessor);
+    }
+    public List<BeanPostProcessor> getBeanPostProcessors() {
+        return this.beanPostProcessors;
     }
 
     // 根据beanID获取BeanDefinition
@@ -60,6 +63,10 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
         return null;
     }
 
+    /**
+     *
+     * @param bd
+     */
     public void resolveBeanClass(BeanDefinition bd) {
         if (bd.hasBeanClass()) {
             return;
@@ -134,6 +141,11 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     }
 
     protected void populateBean(BeanDefinition bd, Object bean) {
+        for(BeanPostProcessor processor : this.getBeanPostProcessors()){
+            if(processor instanceof InstantiationAwareBeanPostProcessor){
+                ((InstantiationAwareBeanPostProcessor)processor).postProcessPropertyValues(bean, bd.getID());
+            }
+        }
         // pvs 是在xml文件中配置的property
         // pds 是PetStoreService中的定义
         // 所以要把pvs和pds进行遍历，(双重循环), 符合要求，则使用set方法进行注入

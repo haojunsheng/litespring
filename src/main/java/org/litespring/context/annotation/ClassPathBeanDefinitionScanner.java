@@ -41,7 +41,7 @@ import java.util.Set;
  * @see org.springframework.stereotype.Service
  * @see org.springframework.stereotype.Controller
  * @since 2.5
- *
+ * <p>
  * 找到那些标记为@Component 的类，
  * 创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。
  */
@@ -54,8 +54,9 @@ public class ClassPathBeanDefinitionScanner {
 
     /**
      * Create a new {@code ClassPathBeanDefinitionScanner} for the given bean factory.
+     *
      * @param registry the {@code BeanFactory} to load bean definitions into, in the form
-     * of a {@code BeanDefinitionRegistry}
+     *                 of a {@code BeanDefinitionRegistry}
      */
     public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry) {
         this.registry = registry;
@@ -66,27 +67,32 @@ public class ClassPathBeanDefinitionScanner {
      * returning the registered bean definitions.
      * <p>This method does <i>not</i> register an annotation config processor
      * but rather leaves this up to the caller.
+     *
      * @param packagesToScan the packages to check for annotated classes
      * @return set of beans registered if any for tooling registration purposes (never {@code null})
      */
     public Set<BeanDefinition> doScan(String packagesToScan) {
         String[] basePackages = StringUtils.tokenizeToStringArray(packagesToScan, ",");
         Set<BeanDefinition> beanDefinitions = new LinkedHashSet<BeanDefinition>();
+        // 多个packages
         for (String basePackage : basePackages) {
             Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
             for (BeanDefinition candidate : candidates) {
                 beanDefinitions.add(candidate);
                 registry.registerBeanDefinition(candidate.getID(), candidate);
-
             }
         }
         return beanDefinitions;
     }
 
+    /**
+     * 所有标记为@Component的类放入set集合中
+     * @param basePackage
+     * @return
+     */
     private Set<BeanDefinition> findCandidateComponents(String basePackage) {
         Set<BeanDefinition> candidates = new LinkedHashSet<BeanDefinition>();
         try {
-
             Resource[] resources = this.resourceLoader.getResources(basePackage);
 
             for (Resource resource : resources) {

@@ -28,5 +28,4 @@ public interface MetadataReader {
      * including metadata for annotated methods.
      */
     AnnotationMetadata getAnnotationMetadata();
-
 }

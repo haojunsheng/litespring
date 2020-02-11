@@ -37,7 +37,6 @@ public class AutowiredFieldElement extends InjectionElement {
             Object value = factory.resolveDependency(desc);
 
             if (value != null) {
-
                 ReflectionUtils.makeAccessible(field);
                 field.set(target, value);
             }
