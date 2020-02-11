@@ -14,7 +14,6 @@ import org.litespring.beans.factory.BeanCreationException;
 import org.litespring.beans.factory.config.AutowireCapableBeanFactory;
 import org.litespring.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.litespring.core.annotation.AnnotationUtils;
-import org.litespring.stereotype.Autowired;
 import org.litespring.util.ReflectionUtils;
 
 /**

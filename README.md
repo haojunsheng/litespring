@@ -292,7 +292,7 @@ public interface BeanDefinition {
 | 接口隔离原则（interface seperation）  |      | DefaultBeanFactory                                           |
 | 依赖隔离                              |      |                                                              |
 
-# 3. testcase-v3-constructor-injection
+# 3. constructor-injection
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916154546.png)
 
@@ -304,7 +304,7 @@ public interface BeanDefinition {
 
 ![](https://raw.githubusercontent.com/Anapodoton/ImageHost/master/img/20190916170604.png)
 
-# 4. testcase-v4-auto-scan
+# 4. auto-scan
 
 1. 实现PackageResourceLoader,把一个package下面的class 变成resource。
 2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。(使用ASM读取类的Metadata)
@@ -425,11 +425,62 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 然后我们使用new AutowiredFieldElement(Field f,boolean required,AutowireCapableBeanFactory factory)的方式创建注解的元素，然后使用new InjectionMetadata(clz,elements)创建了实例，最后使用metadata.inject(Object target)把meta注入到target对象中。
 
+# 5. aop
 
+接下来我们来看aop。
 
+首先我们看下，**为什么要实现aop技术**？如下图所示，我们的用户管理，订单管理，支付管理，可能都需要日志，安全这些功能，在传统的实现中，一旦日志中的代码修改，那么我们的用户管理，订单管理都需要修改，这是不符合实际的，我们希望，日志，安全的修改不影响我们的业务代码，我们希望使用**xml或者注解**的形式，来配置二者之间的关系。
 
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211202114.png" style="zoom:50%;" />
 
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204100.png" style="zoom:50%;" />
 
+我们接着来看**如何实现aop**？
+
+我们有2中方案，1是在编译器来实现，把日志功能在编译器放到业务代码，这样的缺点是致命的，我们必须有源代代码才可以做到，这在实际中是不可能的。
+
+第二种方案是在运行期来做手脚。运行时来动态生成类，问题在于java字节码一旦装入方法区就无法修改，我们如何进行增强呢？一种方案是使用**继承**的技术。在运行时动态生成一个类，继承待增强的类。另外一种方案是使用**动态代理**的技术，定义一个借口，然后实现其兄弟类来实现。
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204344.png" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/20200211204546.png" style="zoom: 33%;" />
+
+<img src="https://tva1.sinaimg.cn/large/0082zybply1gbsr8fyv79j313g0nwqcs.jpg" alt="image-20200211204955382" style="zoom: 25%;" />
+
+接下来我们还需要复习AOP的术语：
+
+- *Aspect*: a modularization of a concern that cuts across multiple classes. Transaction management is a good example of a crosscutting concern in J2EE applications. In Spring AOP, aspects are implemented using regular classes (the [schema-based approach](https://docs.spring.io/spring/docs/2.5.x/reference/aop.html#aop-schema)) or regular classes annotated with the `@Aspect` annotation (the [`@AspectJ` style](https://docs.spring.io/spring/docs/2.5.x/reference/aop.html#aop-ataspectj)).
+
+  - [**What Is Aspect-Oriented Programming?**](https://docs.jboss.org/aop/1.0/aspect-framework/userguide/en/html/what.html)
+  - 如果把这个业务功能看成一层层面包的话， 这些日志/安全/事务 像不像一个个“切面”(Aspect) 。形如TransactionManager。
+
+- *Join point*: a point during the execution of a program, such as the execution of a method or the handling of an exception.  **A join point *always* represents a method execution**.表示一个方法的执行。
+
+- *Pointcut*: a predicate that matches join points. Advice is associated with a pointcut expression and runs at any join point matched by the pointcut (for example, the execution of a method with a certain name). The concept of join points as matched by pointcut expressions is central to AOP, and Spring uses the AspectJ pointcut expression language by default.
+
+  和Join point相匹配。**pointCut形如PetStoreService的placeOrder()方法。**
+
+  <img src="https://raw.githubusercontent.com/Anapodoton/ImageHost/master/20191007180127.png" style="zoom:50%;" />
+
+- *Advice*: action taken by an aspect at a particular join point. Different types of advice include "around," "before" and "after" advice. (Advice types are discussed below.) Many AOP frameworks, including Spring, model an advice as an *interceptor*, maintaining a chain of interceptors *around* the join point.类似于拦截器的作用。
+
+- *Introduction*: declaring additional methods or fields on behalf of a type. Spring AOP allows you to introduce new interfaces (and a corresponding implementation) to any advised object. For example, you could use an introduction to make a bean implement an `IsModified` interface, to simplify caching. (An introduction is known as an inter-type declaration in the AspectJ community.)
+
+- *Target object*: object being advised by one or more aspects. Also referred to as the *advised* object. Since Spring AOP is implemented using runtime proxies, this object will always be a *proxied* object.
+
+- *AOP proxy*: an object created by the AOP framework in order to implement the aspect contracts (advise method executions and so on). In the Spring Framework, an AOP proxy will be a JDK dynamic proxy or a CGLIB proxy.
+
+- *Weaving*: linking aspects with other application types or objects to create an advised object. This can be done at compile time (using the AspectJ compiler, for example), load time, or at runtime. Spring AOP, like other pure Java AOP frameworks, performs weaving at runtime.
+
+Types of advice:
+
+- *Before advice*: Advice that executes before a join point, but which does not have the ability to prevent execution flow proceeding to the join point (unless it throws an exception).
+- *After returning advice*: Advice to be executed after a join point completes normally: for example, if a method returns without throwing an exception.
+- *After throwing advice*: Advice to be executed if a method exits by throwing an exception.
+- *After (finally) advice*: Advice to be executed regardless of the means by which a join point exits (normal or exceptional return).
+- *Around advice*: Advice that surrounds a join point such as a method invocation. This is the most powerful kind of advice. Around advice can perform custom behavior before and after the method invocation. It is also responsible for choosing whether to proceed to the join point or to shortcut the advised method execution by returning its own return value or throwing an exception.
+
+**给定一个类的方法，看是否符合pointcut的表达式。**
 
 
 
