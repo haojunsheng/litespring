@@ -95,4 +95,10 @@ public interface BeanDefinition {
      */
     Class<?> getBeanClass() throws IllegalStateException ;
     boolean hasBeanClass();
+
+    /**
+     *  是否是合成的
+     * @return
+     */
+    boolean isSynthetic();
 }

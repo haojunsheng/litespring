@@ -554,6 +554,7 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
 4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
 5. 引入FactoryBean和BeanFactoryAware:
+6. 创建合成的BeanDefinition:
 
 我们来总结下，到目前为止，实现了什么功能：
 

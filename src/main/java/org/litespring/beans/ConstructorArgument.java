@@ -15,6 +15,11 @@ public class ConstructorArgument {
     public ConstructorArgument() {
 
     }
+
+    public void addArgumentValue(Object value) {
+        this.argumentValues.add(new ValueHolder(value));
+    }
+
     /**
      * Copy all given argument values into this object, using separate holder
      * instances to keep the values independent from the original object.
@@ -29,6 +34,7 @@ public class ConstructorArgument {
     /**
      * Look for an argument value that either corresponds to the given index
      * in the constructor argument list or generically matches by type.
+     *
      * @return the ValueHolder for the argument, or {@code null} if none set
      */
     public List<ValueHolder> getArgumentValues() {

@@ -17,7 +17,6 @@ import java.util.List;
  * registering user-visible bean definitions (which a post-processor might operate on,
  * potentially even reconfiguring the parent name). Use {@code RootBeanDefinition} /
  * {@code ChildBeanDefinition} where parent/child relationships happen to be pre-determined.
- *
  */
 public class GenericBeanDefinition implements BeanDefinition {
     private String id;
@@ -28,13 +27,31 @@ public class GenericBeanDefinition implements BeanDefinition {
     private ConstructorArgument constructorArgument = new ConstructorArgument();
     List<PropertyValue> propertyValues = new ArrayList<PropertyValue>();
     private Class<?> beanClass;
+    //表明这个Bean定义是不是我们litespring自己合成的。
+    private boolean isSynthetic = false;
+
     public GenericBeanDefinition() {
 
     }
+
     public GenericBeanDefinition(String id, String beanClassName) {
         this.id = id;
         this.beanClassName = beanClassName;
     }
+
+    public GenericBeanDefinition(Class<?> clz) {
+        this.beanClass = clz;
+        this.beanClassName = clz.getName();
+    }
+
+    public boolean isSynthetic() {
+        return isSynthetic;
+    }
+
+    public void setSynthetic(boolean isSynthetic) {
+        this.isSynthetic = isSynthetic;
+    }
+
     public boolean isSingleton() {
         return this.singleton;
     }
@@ -48,7 +65,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public void setScope(String scope) {
-        this.scope=scope;
+        this.scope = scope;
         this.singleton = SCOPE_SINGLETON.equals(scope) || SCOPE_DEFAULT.equals(scope);
         this.prototype = SCOPE_PROTOTYPE.equals(scope);
     }
@@ -82,7 +99,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         return !this.constructorArgument.isEmpty();
     }
 
-    public Class<?> resolveBeanClass(ClassLoader classLoader) throws ClassNotFoundException{
+    public Class<?> resolveBeanClass(ClassLoader classLoader) throws ClassNotFoundException {
         String className = getBeanClassName();
         if (className == null) {
             return null;
@@ -91,14 +108,16 @@ public class GenericBeanDefinition implements BeanDefinition {
         this.beanClass = resolvedClass;
         return resolvedClass;
     }
+
     public Class<?> getBeanClass() throws IllegalStateException {
-        if(this.beanClass == null){
+        if (this.beanClass == null) {
             throw new IllegalStateException(
                     "Bean class name [" + this.getBeanClassName() + "] has not been resolved into an actual Class");
         }
         return this.beanClass;
     }
-    public boolean hasBeanClass(){
+
+    public boolean hasBeanClass() {
         return this.beanClass != null;
     }
 }
