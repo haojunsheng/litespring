@@ -89,7 +89,11 @@ p means package，c means class，i means interface, f means function,a means ab
   - config
     - MethodLocatingFactory(C):根据bean的名字和方法名，定位到Method.
   - framework
-    - ReflectiveMethodInvocation(C):Spring's implementation of the AOP Alliance
+    - ReflectiveMethodInvocation(C):Spring's implementation of the AOP Alliance.
+    - AopProxyFactory(I):
+    - AopConfig(I):承载生成代理对象所需要的必要信息，比如相关目标类、Advice、Advisor等.
+    - AopConfigSupport(C):
+    - CglibProxyFactory(C):CGLIB-based  AopProxyFactory implementation for the Spring AOP framework.
 
 ## 1.1 介绍Spring IoC, AOP
 
@@ -546,7 +550,7 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
 2. 实现MethodLocatingFactory。根据bean的名字和方法名，定位到Method。
-3. 实现ReflectiveMethodInvocation(保证拦截器按顺序执行，实现Advice按顺序执行)。
+3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
 4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
 
 我们来总结下，到目前为止，实现了什么功能：
