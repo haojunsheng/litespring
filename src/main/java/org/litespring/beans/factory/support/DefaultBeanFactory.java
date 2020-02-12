@@ -1,15 +1,16 @@
 package org.litespring.beans.factory.support;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.litespring.beans.BeanDefinition;
 import org.litespring.beans.BeansException;
 import org.litespring.beans.PropertyValue;
 import org.litespring.beans.SimpleTypeConverter;
 import org.litespring.beans.factory.BeanCreationException;
-import org.litespring.beans.BeanDefinition;
 import org.litespring.beans.factory.BeanFactoryAware;
 import org.litespring.beans.factory.NoSuchBeanDefinitionException;
 import org.litespring.beans.factory.config.BeanPostProcessor;
-import org.litespring.beans.factory.config.ConfigurableBeanFactory;
 import org.litespring.beans.factory.config.DependencyDescriptor;
 import org.litespring.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.litespring.util.ClassUtils;
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 // 在DefaultBeanFactory 引入SimpleTypeConverter
 public class DefaultBeanFactory extends AbstractBeanFactory
         implements BeanDefinitionRegistry {    // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
+    private static final Log logger = LogFactory.getLog(DefaultBeanFactory.class);
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
     private ClassLoader beanClassLoader;
     private List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
@@ -94,6 +96,14 @@ public class DefaultBeanFactory extends AbstractBeanFactory
     private List<String> getBeanIDsByType(Class<?> type) {
         List<String> result = new ArrayList<String>();
         for (String beanName : this.beanDefinitionMap.keySet()) {
+            Class<?> beanClass = null;
+            try {
+                beanClass = this.getType(beanName);
+            } catch (Exception e) {
+                logger.warn("can't load class for bean :" + beanName + ", skip it.");
+                continue;
+            }
+
             if (type.isAssignableFrom(this.getType(beanName))) {
                 result.add(beanName);
             }
