@@ -2,6 +2,8 @@ package org.litespring.beans.factory;
 
 import org.litespring.beans.BeanDefinition;
 
+import java.util.List;
+
 /**
  * The root interface for accessing a Spring bean container.
  *
@@ -34,7 +36,7 @@ import org.litespring.beans.BeanDefinition;
  * constraints on how the definitions could be stored: LDAP, RDBMS, XML,
  * properties file, etc. Implementations are encouraged to support references
  * amongst beans (Dependency Injection).
- *
+ * <p>
  * 以下是标准生命周期
  * <p>Bean factory implementations should support the standard bean lifecycle interfaces
  * as far as possible. The full set of initialization methods and their standard order is:<br>
@@ -57,14 +59,14 @@ import org.litespring.beans.BeanDefinition;
  * 12. InitializingBean's {@code afterPropertiesSet}<br>
  * 13. a custom init-method definition<br>
  * 14. {@code postProcessAfterInitialization} methods of BeanPostProcessors
- *
+ * <p>
  * BeanFactory关闭时的生命周期方法
  * <p>On shutdown of a bean factory, the following lifecycle methods apply:<br>
  * 1. {@code postProcessBeforeDestruction} methods of DestructionAwareBeanPostProcessors
  * 2. DisposableBean's {@code destroy}<br>
  * 3. a custom destroy-method definition
- *
- */public interface BeanFactory {
+ */
+public interface BeanFactory {
     /**
      * Return an instance, which may be shared or independent, of the specified bean.
      * <p>This method allows a Spring BeanFactory to be used as a replacement for the
@@ -75,6 +77,7 @@ import org.litespring.beans.BeanDefinition;
      * 根据名字获取Bean的实例
      */
     Object getBean(String beanID);
+
     /**
      * Determine the type of the bean with the given name. More specifically,
      * determine the type of object that {@link #getBean} would return for the given name.
@@ -82,14 +85,16 @@ import org.litespring.beans.BeanDefinition;
      * as exposed by {@link FactoryBean#getObjectType()}.
      * <p>Translates aliases back to the corresponding canonical bean name.
      * Will ask the parent factory if the bean cannot be found in this factory instance.
+     *
      * @param name the name of the bean to query
      * @return the type of the bean, or {@code null} if not determinable
      * @throws NoSuchBeanDefinitionException if there is no bean with the given name
-     * @since 1.1.2
      * @see #getBean
      * @see #isTypeMatch
      * 获取指定名字的bean的类型，对于FactoryBean来说，返回的是FactoryBean创建的对象的类型，也就是FactoryBean的getObjectType
+     * @since 1.1.2
      */
     Class<?> getType(String name) throws NoSuchBeanDefinitionException;
 
+    List<Object> getBeansByType(Class<?> type);
 }

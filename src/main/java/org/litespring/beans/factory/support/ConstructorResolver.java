@@ -21,14 +21,14 @@ import java.util.List;
 public class ConstructorResolver {
     protected final Log logger = LogFactory.getLog(getClass());
 
-    private final ConfigurableBeanFactory beanFactory;
+    private final AbstractBeanFactory beanFactory;
 
     /**
      * Create a new ConstructorResolver for the given factory and instantiation strategy.
      *
      * @param beanFactory the ConfigurableBeanFactory to work with
      */
-    public ConstructorResolver(ConfigurableBeanFactory beanFactory) {
+    public ConstructorResolver(AbstractBeanFactory beanFactory) {
         this.beanFactory = beanFactory;
     }
 

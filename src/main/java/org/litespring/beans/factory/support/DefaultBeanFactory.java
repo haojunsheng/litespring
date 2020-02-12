@@ -5,6 +5,7 @@ import org.litespring.beans.PropertyValue;
 import org.litespring.beans.SimpleTypeConverter;
 import org.litespring.beans.factory.BeanCreationException;
 import org.litespring.beans.BeanDefinition;
+import org.litespring.beans.factory.BeanFactoryAware;
 import org.litespring.beans.factory.NoSuchBeanDefinitionException;
 import org.litespring.beans.factory.config.BeanPostProcessor;
 import org.litespring.beans.factory.config.ConfigurableBeanFactory;
@@ -23,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 // BeanFactory的默认实现
 // 拆分了getBean
 // 在DefaultBeanFactory 引入SimpleTypeConverter
-public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory, BeanDefinitionRegistry {
-    // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
+public class DefaultBeanFactory extends AbstractBeanFactory
+        implements BeanDefinitionRegistry {    // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
     private ClassLoader beanClassLoader;
     private List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
@@ -35,9 +36,10 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
 
     }
 
-    public void addBeanPostProcessor(BeanPostProcessor postProcessor){
+    public void addBeanPostProcessor(BeanPostProcessor postProcessor) {
         this.beanPostProcessors.add(postProcessor);
     }
+
     public List<BeanPostProcessor> getBeanPostProcessors() {
         return this.beanPostProcessors;
     }
@@ -65,7 +67,6 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     }
 
     /**
-     *
      * @param bd
      */
     public void resolveBeanClass(BeanDefinition bd) {
@@ -78,6 +79,25 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
                 throw new RuntimeException("can't load class:" + bd.getBeanClassName());
             }
         }
+    }
+
+    public List<Object> getBeansByType(Class<?> type) {
+        List<Object> result = new ArrayList<Object>();
+        List<String> beanIDs = this.getBeanIDsByType(type);
+        for (String beanID : beanIDs) {
+            result.add(this.getBean(beanID));
+        }
+        return result;
+    }
+
+    private List<String> getBeanIDsByType(Class<?> type) {
+        List<String> result = new ArrayList<String>();
+        for (String beanName : this.beanDefinitionMap.keySet()) {
+            if (type.isAssignableFrom(this.getType(beanName))) {
+                result.add(beanName);
+            }
+        }
+        return result;
     }
 
     // 根据beanID，通过反射的形式获取类的实例
@@ -101,7 +121,7 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
 
     public Class<?> getType(String name) throws NoSuchBeanDefinitionException {
         BeanDefinition bd = this.getBeanDefinition(name);
-        if(bd == null){
+        if (bd == null) {
             throw new NoSuchBeanDefinitionException(name);
         }
         resolveBeanClass(bd);
@@ -126,11 +146,12 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
         }
     }
 
-    private Object createBean(BeanDefinition bd) {
+    protected Object createBean(BeanDefinition bd) {
         //创建实例
         Object bean = instantiateBean(bd);
         //设置属性
         populateBean(bd, bean);
+        bean = initializeBean(bd, bean);
         return bean;
     }
 
@@ -151,9 +172,9 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     }
 
     protected void populateBean(BeanDefinition bd, Object bean) {
-        for(BeanPostProcessor processor : this.getBeanPostProcessors()){
-            if(processor instanceof InstantiationAwareBeanPostProcessor){
-                ((InstantiationAwareBeanPostProcessor)processor).postProcessPropertyValues(bean, bd.getID());
+        for (BeanPostProcessor processor : this.getBeanPostProcessors()) {
+            if (processor instanceof InstantiationAwareBeanPostProcessor) {
+                ((InstantiationAwareBeanPostProcessor) processor).postProcessPropertyValues(bean, bd.getID());
             }
         }
         // pvs 是在xml文件中配置的property
@@ -186,6 +207,19 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
             }
         } catch (Exception ex) {
             throw new BeanCreationException("Failed to obtain BeanInfo for class [" + bd.getBeanClassName() + "]", ex);
+        }
+    }
+
+    protected Object initializeBean(BeanDefinition bd, Object bean) {
+        invokeAwareMethods(bean);
+        //Todo，对Bean做初始化
+        //创建代理
+        return bean;
+    }
+
+    private void invokeAwareMethods(final Object bean) {
+        if (bean instanceof BeanFactoryAware) {
+            ((BeanFactoryAware) bean).setBeanFactory(this);
         }
     }
 

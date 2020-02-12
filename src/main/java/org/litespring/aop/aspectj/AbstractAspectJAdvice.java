@@ -24,8 +24,8 @@ public abstract class AbstractAspectJAdvice implements Advice {
     /**
      * Create a new AbstractAspectJAdvice for the given advice method.
      *
-     * @param adviceMethod the AspectJ-style advice method
-     * @param pointcut     the AspectJ expression pointcut
+     * @param adviceMethod        the AspectJ-style advice method
+     * @param pointcut            the AspectJ expression pointcut
      * @param adviceObjectFactory the factory for aspect instances
      */
     public AbstractAspectJAdvice(Method adviceMethod,
@@ -55,5 +55,9 @@ public abstract class AbstractAspectJAdvice implements Advice {
 
     public Method getAdviceMethod() {
         return adviceMethod;
+    }
+
+    public Object getAdviceInstance() throws Exception {
+        return adviceObjectFactory.getAspectInstance();
     }
 }
