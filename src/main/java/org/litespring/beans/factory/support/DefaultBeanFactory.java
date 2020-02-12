@@ -1,6 +1,7 @@
 package org.litespring.beans.factory.support;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.litespring.beans.BeansException;
 import org.litespring.beans.PropertyValue;
 import org.litespring.beans.SimpleTypeConverter;
 import org.litespring.beans.factory.BeanCreationException;
@@ -152,7 +153,24 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         //设置属性
         populateBean(bd, bean);
         bean = initializeBean(bd, bean);
+        //Todo，调用Bean的init方法，暂不实现
+        if (!bd.isSynthetic()) {
+            return applyBeanPostProcessorsAfterInitialization(bean, bd.getID());
+        }
         return bean;
+    }
+
+    public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
+            throws BeansException {
+
+        Object result = existingBean;
+        for (BeanPostProcessor beanProcessor : getBeanPostProcessors()) {
+            result = beanProcessor.afterInitialization(result, beanName);
+            if (result == null) {
+                return result;
+            }
+        }
+        return result;
     }
 
     private Object instantiateBean(BeanDefinition bd) {

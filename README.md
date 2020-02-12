@@ -555,6 +555,8 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
 5. 引入FactoryBean和BeanFactoryAware:
 6. 创建合成的BeanDefinition:
+7. 从“合成”Bean定义创建Bean实例；
+8. 用AspectJAutoProxyCreator组合所有功能;
 
 我们来总结下，到目前为止，实现了什么功能：
 
