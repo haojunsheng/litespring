@@ -84,8 +84,12 @@ p means package，c means class，i means interface, f means function,a means ab
   - MethodMatcher(I):该接口定义了静态方法匹配器和动态方法匹配器
   - aspectj
     - AspectJExpressionPointcut(C):uses the AspectJ weaver to evaluate a pointcut expression.
+    - AspectJBeforeAdvice(C):
+    - AbstractAspectJAdvice(C):
   - config
     - MethodLocatingFactory(C):根据bean的名字和方法名，定位到Method.
+  - framework
+    - ReflectiveMethodInvocation(C):Spring's implementation of the AOP Alliance
 
 ## 1.1 介绍Spring IoC, AOP
 
@@ -456,6 +460,20 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 接下来我们还需要复习AOP的术语：
 
+![Spring AOP](img/spring-aop-diagram.jpg)
+
+举个例子：
+
+“切面“类(Aspect)，是一个普通的java类，不用实现什么“乱七八糟”的接口。如下所示：
+
+![img](img/640.jpeg)
+
+我们想达到的目的只这样的： 对于com.coderising这个包中所有类的execute方法， 在方法调用之前，需要执行Transaction.beginTx()方法， 在调用之后， 需要执行Transaction.commitTx()方法。
+
+“对于com.coderising这个包中所有类的execute方法” ， 用一个时髦的词来描述就是**切入点（PointCut）** , 它可以是一个方法或一组方法（可以通过通配符来支持，你懂的）。
+
+”在方法调用之前/之后 ， 需要执行xxx“ , 用另外一个时髦的词来描述就是**通知（Advice）**
+
 - *Aspect*: a modularization of a concern that cuts across multiple classes. Transaction management is a good example of a crosscutting concern in J2EE applications. In Spring AOP, aspects are implemented using regular classes (the [schema-based approach](https://docs.spring.io/spring/docs/2.5.x/reference/aop.html#aop-schema)) or regular classes annotated with the `@Aspect` annotation (the [`@AspectJ` style](https://docs.spring.io/spring/docs/2.5.x/reference/aop.html#aop-ataspectj)).
 
   - [**What Is Aspect-Oriented Programming?**](https://docs.jboss.org/aop/1.0/aspect-framework/userguide/en/html/what.html)
@@ -493,9 +511,6 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 我们定义了AspectJExpressionPointcut，来实现了PoinCut和MethodMatcher接口。 
 
-1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
-2. 实现MethodLocatingFactory。
-
 <img src="img/20191001162012.png" style="zoom:33%;" />
 
 <img src="img/image-20200211220322915.png" alt="image-20200211220322915" style="zoom:33%;" />
@@ -504,25 +519,43 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 <img src="img/image-20200211221731468.png" alt="image-20200211221731468" style="zoom: 33%;" />
 
-用于获取需要注入的类（如日志，事物）的方法,是advice。
-
-![](img/20191006211427.png)
-
-下面我们实现拦截器。
-
-![](img/20191006223448.png)
 
 
+重点：实现指定次序的链式调用。
 
-![](img/20191006223519.png)
+- 给定一个对象(petStoreService)和方法(placeOrder) + 若干拦截器；
+
+- 目标：拦截器能够以正确的次序执行。
+  - beforeXXX;
+  - placeOrder;
+  - afterXXX;
+
+ 下面我们实现拦截器。先来看下spring定义的拦截器。
+
+<img src="img/20191006223448.png" style="zoom:33%;" />
+
+我们需要实现一个关键的类：ReflectiveMethodInvocation，保证拦截器按顺序执行。
+
+<img src="img/20191006223519.png" style="zoom:25%;" />
 
 
 
 下面我们将把CGLIB和链式拦截器调用进行结合,实现AopProxyFactory。
 
+<img src="img/image-20200212111039869.png" alt="image-20200212111039869" style="zoom:50%;" />
 
+1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
+2. 实现MethodLocatingFactory。根据bean的名字和方法名，定位到Method。
+3. 实现ReflectiveMethodInvocation(保证拦截器按顺序执行，实现Advice按顺序执行)。
+4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
 
-![](img/20191007160648.png)
+我们来总结下，到目前为止，实现了什么功能：
+
+- 根据Bean的名称和方法名，获取这个Method对象(MethodLocatingFactory);
+- 给定一个类的方法，判断该方法是否符合poincut的表达式(AspectJExpressionPointcut);
+- 实现了before，AfterReturning,AfterThrowing等Advice;
+- 实现了Advice的按顺序执行(ReflectiveMethodInvocation);
+- 给定一个AopConfig,使用Cglib生成一个对象的代理；
 
 
 
