@@ -88,6 +88,7 @@ p means package，c means class，i means interface, f means function,a means ab
     - AbstractAspectJAdvice(C):
   - config
     - MethodLocatingFactory(C):根据bean的名字和方法名，定位到Method.
+    - AspectInstanceFactory(C):
   - framework
     - ReflectiveMethodInvocation(C):Spring's implementation of the AOP Alliance.
     - AopProxyFactory(I):
@@ -552,6 +553,7 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 2. 实现MethodLocatingFactory。根据bean的名字和方法名，定位到Method。
 3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
 4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
+5. 引入FactoryBean和BeanFactoryAware:
 
 我们来总结下，到目前为止，实现了什么功能：
 
@@ -561,29 +563,23 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 - 实现了Advice的按顺序执行(ReflectiveMethodInvocation);
 - 给定一个AopConfig,使用Cglib生成一个对象的代理；
 
+我们还需要最后一个准备工作，如何从xml中创建BeanDefinition。先来看下之前的xml和现在的xml文件的区别，可以发现区别还是蛮大的。
 
+<img src="img/20191007161342.png" style="zoom:33%;" />
 
-![](img/20191007161342.png)
+spring并没有使用一个新的bean定义，直接使用了GenericBeanDefinition。
 
-<img src="img/20191007161602.png" style="zoom:67%;" />
-
-
-
-![](img/20191007162149.png)
-
+<img src="img/20191007161602.png" style="zoom: 33%;" />
 
 
 
+<img src="img/20191007162149.png" style="zoom:33%;" />
 
+<img src="img/20191007163620.png" style="zoom:33%;" />
 
+但是遇到了类型不匹配的问题。
 
-![](img/20191007163620.png)
-
-
-
-
-
-![](img/20191007163739.png)
+<img src="img/20191007163739.png" style="zoom:25%;" />
 
 
 

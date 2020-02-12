@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import org.litespring.aop.Advice;
 import org.litespring.aop.Pointcut;
+import org.litespring.aop.config.AspectInstanceFactory;
 
 /**
  * Base class for AOP Alliance {@link org.aopalliance.aop.Advice} classes
@@ -18,21 +19,21 @@ import org.litespring.aop.Pointcut;
 public abstract class AbstractAspectJAdvice implements Advice {
     protected Method adviceMethod;
     protected AspectJExpressionPointcut pointcut;
-    protected Object adviceObject;
+    protected AspectInstanceFactory adviceObjectFactory;
 
     /**
      * Create a new AbstractAspectJAdvice for the given advice method.
      *
      * @param adviceMethod the AspectJ-style advice method
      * @param pointcut     the AspectJ expression pointcut
-     * @param adviceObject the factory for aspect instances
+     * @param adviceObjectFactory the factory for aspect instances
      */
     public AbstractAspectJAdvice(Method adviceMethod,
                                  AspectJExpressionPointcut pointcut,
-                                 Object adviceObject) {
+                                 AspectInstanceFactory adviceObjectFactory) {
         this.adviceMethod = adviceMethod;
         this.pointcut = pointcut;
-        this.adviceObject = adviceObject;
+        this.adviceObjectFactory = adviceObjectFactory;
     }
 
     /**
@@ -42,7 +43,7 @@ public abstract class AbstractAspectJAdvice implements Advice {
      */
     public void invokeAdviceMethod() throws Throwable {
 
-        adviceMethod.invoke(adviceObject);
+        adviceMethod.invoke(adviceObjectFactory);
     }
 
     /**
