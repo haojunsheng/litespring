@@ -1,10 +1,10 @@
 package org.litespring.aop.aspectj;
 
-import java.lang.reflect.Method;
-
 import org.litespring.aop.Advice;
 import org.litespring.aop.Pointcut;
 import org.litespring.aop.config.AspectInstanceFactory;
+
+import java.lang.reflect.Method;
 
 /**
  * Base class for AOP Alliance {@link org.aopalliance.aop.Advice} classes
@@ -43,7 +43,7 @@ public abstract class AbstractAspectJAdvice implements Advice {
      */
     public void invokeAdviceMethod() throws Throwable {
 
-        adviceMethod.invoke(adviceObjectFactory);
+        adviceMethod.invoke(adviceObjectFactory.getAspectInstance());
     }
 
     /**

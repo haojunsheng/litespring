@@ -1,6 +1,5 @@
 package org.litespring.beans.factory.support;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.litespring.beans.BeanDefinition;
@@ -27,13 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 // 拆分了getBean
 // 在DefaultBeanFactory 引入SimpleTypeConverter
 public class DefaultBeanFactory extends AbstractBeanFactory
-        implements BeanDefinitionRegistry {    // beanDefinitionMap 存放beanID 和 BeanDefinition的映射
+        implements BeanDefinitionRegistry {// beanDefinitionMap 存放beanID 和 BeanDefinition的映射
     private static final Log logger = LogFactory.getLog(DefaultBeanFactory.class);
-    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
-    private ClassLoader beanClassLoader;
     private List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
 
-    SimpleTypeConverter converter = new SimpleTypeConverter();
+    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>(64);
+    private ClassLoader beanClassLoader;
 
     public DefaultBeanFactory() {
 
@@ -47,41 +45,13 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         return this.beanPostProcessors;
     }
 
-    // 根据beanID获取BeanDefinition
-    public BeanDefinition getBeanDefinition(String beanID) {
-        return this.beanDefinitionMap.get(beanID);
-    }
-
     public void registerBeanDefinition(String beanID, BeanDefinition bd) {
         this.beanDefinitionMap.put(beanID, bd);
     }
 
-    public Object resolveDependency(DependencyDescriptor descriptor) {
-        Class<?> typeToMatch = descriptor.getDependencyType();
-        for (BeanDefinition bd : this.beanDefinitionMap.values()) {
-            //确保BeanDefinition 有Class对象
-            resolveBeanClass(bd);
-            Class<?> beanClass = bd.getBeanClass();
-            if (typeToMatch.isAssignableFrom(beanClass)) {
-                return this.getBean(bd.getID());
-            }
-        }
-        return null;
-    }
+    public BeanDefinition getBeanDefinition(String beanID) {
 
-    /**
-     * @param bd
-     */
-    public void resolveBeanClass(BeanDefinition bd) {
-        if (bd.hasBeanClass()) {
-            return;
-        } else {
-            try {
-                bd.resolveBeanClass(this.getBeanClassLoader());
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("can't load class:" + bd.getBeanClassName());
-            }
-        }
+        return this.beanDefinitionMap.get(beanID);
     }
 
     public List<Object> getBeansByType(Class<?> type) {
@@ -104,7 +74,7 @@ public class DefaultBeanFactory extends AbstractBeanFactory
                 continue;
             }
 
-            if (type.isAssignableFrom(this.getType(beanName))) {
+            if ((beanClass != null) && type.isAssignableFrom(beanClass)) {
                 result.add(beanName);
             }
         }
@@ -117,6 +87,7 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         if (bd == null) {
             return null;
         }
+
         if (bd.isSingleton()) {
             Object bean = this.getSingleton(beanID);
             if (bean == null) {
@@ -130,39 +101,77 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         return createBean(bd);
     }
 
-    public Class<?> getType(String name) throws NoSuchBeanDefinitionException {
-        BeanDefinition bd = this.getBeanDefinition(name);
-        if (bd == null) {
-            throw new NoSuchBeanDefinitionException(name);
-        }
-        resolveBeanClass(bd);
-        return bd.getBeanClass();
-    }
-
-    private void populateBeanUseCommonUtils(BeanDefinition bd, Object bean) {
-        List<PropertyValue> pvs = bd.getPropertyValues();
-        if (null == pvs || pvs.isEmpty()) {
-            return;
-        }
-        BeanDefinitionValueResolver valueResolver = new BeanDefinitionValueResolver(this);
-        try {
-            for (PropertyValue pv : pvs) {
-                String propertyName = pv.getName();
-                Object originalValue = pv.getValue();
-                Object resolvedValue = valueResolver.resolveValueIfNecessary(originalValue);
-                BeanUtils.setProperty(bean, propertyName, resolvedValue);
-            }
-        } catch (Exception e) {
-            throw new BeanCreationException("Failed to obtain BeanInfo for class [" + bd.getBeanClassName() + "]", e);
-        }
-    }
-
     protected Object createBean(BeanDefinition bd) {
         //创建实例
         Object bean = instantiateBean(bd);
         //设置属性
         populateBean(bd, bean);
+
         bean = initializeBean(bd, bean);
+
+        return bean;
+
+    }
+
+    private Object instantiateBean(BeanDefinition bd) {
+        if (bd.hasConstructorArgumentValues()) {
+            ConstructorResolver resolver = new ConstructorResolver(this);
+            return resolver.autowireConstructor(bd);
+        } else {
+            ClassLoader cl = this.getBeanClassLoader();
+            String beanClassName = bd.getBeanClassName();
+            try {
+                Class<?> clz = cl.loadClass(beanClassName);
+                return clz.newInstance();
+            } catch (Exception e) {
+                throw new BeanCreationException("create bean for " + beanClassName + " failed", e);
+            }
+        }
+    }
+
+    protected void populateBean(BeanDefinition bd, Object bean) {
+
+        for (BeanPostProcessor processor : this.getBeanPostProcessors()) {
+            if (processor instanceof InstantiationAwareBeanPostProcessor) {
+                ((InstantiationAwareBeanPostProcessor) processor).postProcessPropertyValues(bean, bd.getID());
+            }
+        }
+        // pvs 是在xml文件中配置的property
+        // pds 是PetStoreService中的定义
+        // 所以要把pvs和pds进行遍历，(双重循环), 符合要求，则使用set方法进行注入
+        List<PropertyValue> pvs = bd.getPropertyValues();
+
+        if (pvs == null || pvs.isEmpty()) {
+            return;
+        }
+
+        BeanDefinitionValueResolver valueResolver = new BeanDefinitionValueResolver(this);
+        SimpleTypeConverter converter = new SimpleTypeConverter();
+        try {
+            for (PropertyValue pv : pvs) {
+                String propertyName = pv.getName();
+                Object originalValue = pv.getValue();
+                Object resolvedValue = valueResolver.resolveValueIfNecessary(originalValue);
+
+                BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
+                PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+                for (PropertyDescriptor pd : pds) {
+                    if (pd.getName().equals(propertyName)) {
+                        Object convertedValue = converter.convertIfNecessary(resolvedValue, pd.getPropertyType());
+                        pd.getWriteMethod().invoke(bean, convertedValue);
+                        break;
+                    }
+                }
+
+
+            }
+        } catch (Exception ex) {
+            throw new BeanCreationException("Failed to obtain BeanInfo for class [" + bd.getBeanClassName() + "]", ex);
+        }
+    }
+
+    protected Object initializeBean(BeanDefinition bd, Object bean) {
+        invokeAwareMethods(bean);
         //Todo，调用Bean的init方法，暂不实现
         if (!bd.isSynthetic()) {
             return applyBeanPostProcessorsAfterInitialization(bean, bd.getID());
@@ -183,68 +192,6 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         return result;
     }
 
-    private Object instantiateBean(BeanDefinition bd) {
-        if (bd.hasConstructorArgumentValues()) {
-            ConstructorResolver resolver = new ConstructorResolver(this);
-            return resolver.autowireConstructor(bd);
-        } else {
-            ClassLoader cl = this.getBeanClassLoader();
-            String beanClassName = bd.getBeanClassName();
-            try {
-                Class<?> clz = cl.loadClass(beanClassName);
-                return clz.newInstance();
-            } catch (Exception e) {
-                throw new BeanCreationException("create bean for " + beanClassName + " failed", e);
-            }
-        }
-    }
-
-    protected void populateBean(BeanDefinition bd, Object bean) {
-        for (BeanPostProcessor processor : this.getBeanPostProcessors()) {
-            if (processor instanceof InstantiationAwareBeanPostProcessor) {
-                ((InstantiationAwareBeanPostProcessor) processor).postProcessPropertyValues(bean, bd.getID());
-            }
-        }
-        // pvs 是在xml文件中配置的property
-        // pds 是PetStoreService中的定义
-        // 所以要把pvs和pds进行遍历，(双重循环), 符合要求，则使用set方法进行注入
-        List<PropertyValue> pvs = bd.getPropertyValues();
-
-        if (pvs == null || pvs.isEmpty()) {
-            return;
-        }
-
-        BeanDefinitionValueResolver valueResolver = new BeanDefinitionValueResolver(this);
-
-        try {
-            for (PropertyValue pv : pvs) {
-                String propertyName = pv.getName();
-                Object originalValue = pv.getValue();
-                Object resolvedValue = valueResolver.resolveValueIfNecessary(originalValue);
-
-                BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
-
-                PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-                for (PropertyDescriptor pd : pds) {
-                    if (pd.getName().equals(propertyName)) {
-                        Object convertedValue = converter.convertIfNecessary(resolvedValue, pd.getPropertyType());
-                        pd.getWriteMethod().invoke(bean, convertedValue);
-                        break;
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            throw new BeanCreationException("Failed to obtain BeanInfo for class [" + bd.getBeanClassName() + "]", ex);
-        }
-    }
-
-    protected Object initializeBean(BeanDefinition bd, Object bean) {
-        invokeAwareMethods(bean);
-        //Todo，对Bean做初始化
-        //创建代理
-        return bean;
-    }
-
     private void invokeAwareMethods(final Object bean) {
         if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(this);
@@ -257,5 +204,40 @@ public class DefaultBeanFactory extends AbstractBeanFactory
 
     public ClassLoader getBeanClassLoader() {
         return (this.beanClassLoader != null ? this.beanClassLoader : ClassUtils.getDefaultClassLoader());
+    }
+
+    public Object resolveDependency(DependencyDescriptor descriptor) {
+
+        Class<?> typeToMatch = descriptor.getDependencyType();
+        for (BeanDefinition bd : this.beanDefinitionMap.values()) {
+            //确保BeanDefinition 有Class对象
+            resolveBeanClass(bd);
+            Class<?> beanClass = bd.getBeanClass();
+            if (typeToMatch.isAssignableFrom(beanClass)) {
+                return this.getBean(bd.getID());
+            }
+        }
+        return null;
+    }
+
+    public void resolveBeanClass(BeanDefinition bd) {
+        if (bd.hasBeanClass()) {
+            return;
+        } else {
+            try {
+                bd.resolveBeanClass(this.getBeanClassLoader());
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("can't load class:" + bd.getBeanClassName());
+            }
+        }
+    }
+
+    public Class<?> getType(String name) throws NoSuchBeanDefinitionException {
+        BeanDefinition bd = this.getBeanDefinition(name);
+        if (bd == null) {
+            throw new NoSuchBeanDefinitionException(name);
+        }
+        resolveBeanClass(bd);
+        return bd.getBeanClass();
     }
 }

@@ -72,11 +72,10 @@ public class AspectJAutoProxyCreator implements BeanPostProcessor {
 
         AopProxyFactory proxyFactory = null;
         if (config.getProxiedInterfaces().length == 0) {
-//            proxyFactory = new CglibProxyFactory(config);
-            proxyFactory = new JdkAopProxyFactory(config);
+            proxyFactory = new CglibProxyFactory(config);
         } else {
-            //TODO 需要实现JDK 代理
-            //proxyFactory = new JdkAopProxyFactory(config);
+
+            proxyFactory = new JdkAopProxyFactory(config);
         }
 
 

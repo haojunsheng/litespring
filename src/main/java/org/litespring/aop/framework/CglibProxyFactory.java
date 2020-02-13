@@ -1,22 +1,18 @@
 package org.litespring.aop.framework;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.litespring.aop.Advice;
 import org.litespring.util.Assert;
 import org.springframework.cglib.core.CodeGenerationException;
 import org.springframework.cglib.core.SpringNamingPolicy;
-import org.springframework.cglib.proxy.Callback;
-import org.springframework.cglib.proxy.CallbackFilter;
-import org.springframework.cglib.proxy.Enhancer;
-import org.springframework.cglib.proxy.MethodInterceptor;
-import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.cglib.proxy.*;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * CGLIB-based {@link AopProxyFactory} implementation for the Spring AOP framework.
@@ -76,7 +72,6 @@ public class CglibProxyFactory implements AopProxyFactory {
         if (logger.isDebugEnabled()) {
             logger.debug("Creating CGLIB proxy: target source is " + this.config.getTargetClass());
         }
-
         try {
             Class<?> rootClass = this.config.getTargetClass();
 
@@ -134,8 +129,10 @@ public class CglibProxyFactory implements AopProxyFactory {
 		return new Enhancer();
 	}*/
     private Callback[] getCallbacks(Class<?> rootClass) throws Exception {
+
         Callback aopInterceptor = new DynamicAdvisedInterceptor(this.config);
         //Callback targetInterceptor = new StaticUnadvisedExposedInterceptor(this.advised.getTargetObject());
+
         //Callback targetDispatcher = new StaticDispatcher(this.advised.getTargetObject());
 
         Callback[] callbacks = new Callback[]{
@@ -196,9 +193,7 @@ public class CglibProxyFactory implements AopProxyFactory {
             } else {
                 List<org.aopalliance.intercept.MethodInterceptor> interceptors =
                         new ArrayList<org.aopalliance.intercept.MethodInterceptor>();
-
                 interceptors.addAll(chain);
-
                 // We need to create a method invocation...
                 retVal = new ReflectiveMethodInvocation(target, method, args, interceptors).proceed();
             }

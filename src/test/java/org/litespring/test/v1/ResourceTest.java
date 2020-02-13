@@ -1,12 +1,12 @@
 package org.litespring.test.v1;
 
-import java.io.InputStream;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.litespring.core.io.ClassPathResource;
 import org.litespring.core.io.FileSystemResource;
 import org.litespring.core.io.Resource;
+
+import java.io.InputStream;
 
 // 判断传入的配置文件是否真的存在
 // 我们既可以从ClassPathResource读取配置文件，也可以从FileSystemResource配置文件
@@ -33,7 +33,7 @@ public class ResourceTest {
     @Test
     public void testFileSystemResource() throws Exception {
 
-        Resource r = new FileSystemResource("/Users/anapodoton/learning/github/mylitespring/src/test/resources/petstore-v1.xml");
+        Resource r = new FileSystemResource("/Users/anapodoton/learning/github/litespring/src/test/resources/petstore-v1.xml");
         InputStream is = null;
         try {
             is = r.getInputStream();

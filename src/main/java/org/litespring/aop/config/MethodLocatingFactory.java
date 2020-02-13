@@ -1,15 +1,16 @@
 package org.litespring.aop.config;
 
-import java.lang.reflect.Method;
-
 import org.litespring.beans.BeanUtils;
 import org.litespring.beans.factory.BeanFactory;
 import org.litespring.beans.factory.BeanFactoryAware;
 import org.litespring.beans.factory.FactoryBean;
 import org.litespring.util.StringUtils;
 
+import java.lang.reflect.Method;
+
 /**
- * 根据bean的名字和方法名，定位到Method.
+ * 根据bean的名字和方法名，获取BeanDefinition,
+ * 继而获取到bean的字节码，最后定位到Method.
  */
 public class MethodLocatingFactory implements FactoryBean<Method>, BeanFactoryAware {
 
@@ -39,6 +40,11 @@ public class MethodLocatingFactory implements FactoryBean<Method>, BeanFactoryAw
         this.methodName = methodName;
     }
 
+    /**
+     *
+     * @param beanFactory owning BeanFactory (never {@code null}).
+     *                    The bean can immediately call methods on the factory.
+     */
     public void setBeanFactory(BeanFactory beanFactory) {
         if (!StringUtils.hasText(this.targetBeanName)) {
             throw new IllegalArgumentException("Property 'targetBeanName' is required");
@@ -46,7 +52,9 @@ public class MethodLocatingFactory implements FactoryBean<Method>, BeanFactoryAw
         if (!StringUtils.hasText(this.methodName)) {
             throw new IllegalArgumentException("Property 'methodName' is required");
         }
-
+        /**
+         * 根据bean的name获取bean的字节码
+         */
         Class<?> beanClass = beanFactory.getType(this.targetBeanName);
         if (beanClass == null) {
             throw new IllegalArgumentException("Can't determine type of bean with name '" + this.targetBeanName + "'");

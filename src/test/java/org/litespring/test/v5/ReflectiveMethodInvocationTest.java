@@ -24,6 +24,7 @@ public class ReflectiveMethodInvocationTest extends AbstractV5Test {
     private AspectJBeforeAdvice beforeAdvice = null;
     private AspectJAfterReturningAdvice afterAdvice = null;
     private AspectJExpressionPointcut pc = null;
+
     private BeanFactory beanFactory = null;
     private AspectInstanceFactory aspectInstanceFactory = null;
     private AspectJAfterThrowingAdvice afterThrowingAdvice = null;

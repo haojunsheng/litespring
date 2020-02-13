@@ -16,9 +16,9 @@ Spring 3.2.18
 
 p means package，c means class，i means interface, f means function,a means abstract class
 
-- beans(p)
-  - factory(p)：存放所有的工厂接口  
-    - support(p)：实现
+- beans(p):单纯的bean的定义，bean的属性和bean的构造函数
+  - factory(p)：存放所有的工厂接口，工厂模式 
+    - support(p)：factory的实现
       - DefaultBeanFactory(c):BeanFactory的默认实现
       - GenericBeanDefinition(c):GenericBeanDefinition is a one-stop shop for standard bean definition purposes.
       - BeanDefinitionRegistry(I):Interface for registries that hold bean definitions
@@ -27,7 +27,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - BeanNameGenerator(I):Strategy interface for generating bean names for bean definitions.
     - xml
       - XmlBeanDefinitionReader：Bean definition reader for XML bean definitions.
-    - config
+    - config:factory的配置
       - ConfigurableBeanFactory(I):提供Factory的配置功能
       - SingletonBeanRegistry(I):单例类注册
       - RuntimeBeanReference(C):Immutable placeholder class used for a property value object when it's a reference to another bean in the factory, to be resolved at runtime.
@@ -36,7 +36,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - AutowireCapableBeanFactory(I):定义了bean的自动装配规则
       - BeanPostProcessor(I):可以在bean初始化前后做操作
       - InstantiationAwareBeanPostProcessor(C):对bean的实例化做一些操作
-    - annotation
+    - annotation:注解相关
       - InjectionMetadata(C):Internal class for managing injection metadata.
       - AutowiredAnnotationProcessor(C):封装了InjectionMetadata
     - BeanFactory(I):The root interface for accessing a Spring bean container
@@ -76,7 +76,7 @@ p means package，c means class，i means interface, f means function,a means ab
       - AnnotationMetadataReadingVisitor:读取注解的信息
       - MetadataReader:Simple facade for accessing class metadata.
       - SimpleMetadataReader:MetadataReader的实现
-- stereotype
+- stereotype:注解的定义
   - Component(@interface):Indicates that an annotated class is a "component".
   - Autowired(@interface):Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.
 - aop
@@ -520,13 +520,13 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 <img src="img/image-20200211220322915.png" alt="image-20200211220322915" style="zoom:33%;" />
 
-接着我们来看另外的点。MethodLocatingFactory用来定位Method，根据bean的名字和方法名，定位到这个Method，然后通过反射调用。
+接着我们来看另外的点。MethodLocatingFactory用来定位Method，根据bean的名字和方法名(tx,start)，定位到这个Method，然后通过反射调用。
 
 <img src="img/image-20200211221731468.png" alt="image-20200211221731468" style="zoom: 33%;" />
 
 
 
-重点：实现指定次序的链式调用。
+下一个重点：实现指定次序的链式调用。
 
 - 给定一个对象(petStoreService)和方法(placeOrder) + 若干拦截器；
 
@@ -549,8 +549,8 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 <img src="img/image-20200212111039869.png" alt="image-20200212111039869" style="zoom:50%;" />
 
-1. 定义AspectJExpressionPointcut。来实现了PoinCut和MethodMatcher接口。
-2. 实现MethodLocatingFactory。根据bean的名字和方法名，定位到Method。
+1. 定义AspectJExpressionPointcut。来实现了PoinCut(切入点，定义了哪些连接点需要被织入需要被织入横切逻辑)和MethodMatcher接口。
+2. 实现MethodLocatingFactory。根据bean的名字和方法名，获取BeanDefinition,继而获取到bean的字节码，最后定位到Method.
 3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
 4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
 5. 引入FactoryBean和BeanFactoryAware:
@@ -586,7 +586,7 @@ spring并没有使用一个新的bean定义，直接使用了GenericBeanDefiniti
 
 
 
-
+aop的核心，一个是链式调用，另外一个是通过Factory获得代理的实例。
 
 
 

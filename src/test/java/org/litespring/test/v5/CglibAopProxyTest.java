@@ -1,7 +1,5 @@
 package org.litespring.test.v5;
 
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,8 +12,9 @@ import org.litespring.aop.framework.AopConfigSupport;
 import org.litespring.aop.framework.CglibProxyFactory;
 import org.litespring.beans.factory.BeanFactory;
 import org.litespring.service.v5.PetStoreService;
-import org.litespring.tx.TransactionManager;
 import org.litespring.util.MessageTracker;
+
+import java.util.List;
 
 public class CglibAopProxyTest extends AbstractV5Test {
     private AspectJBeforeAdvice beforeAdvice = null;

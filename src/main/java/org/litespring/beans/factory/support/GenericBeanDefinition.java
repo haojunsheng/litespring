@@ -99,6 +99,12 @@ public class GenericBeanDefinition implements BeanDefinition {
         return !this.constructorArgument.isEmpty();
     }
 
+    /**
+     * 生成bean的字节码
+     * @param classLoader
+     * @return
+     * @throws ClassNotFoundException
+     */
     public Class<?> resolveBeanClass(ClassLoader classLoader) throws ClassNotFoundException {
         String className = getBeanClassName();
         if (className == null) {
@@ -109,6 +115,11 @@ public class GenericBeanDefinition implements BeanDefinition {
         return resolvedClass;
     }
 
+    /**
+     * 获取beanClass
+     * @return
+     * @throws IllegalStateException
+     */
     public Class<?> getBeanClass() throws IllegalStateException {
         if (this.beanClass == null) {
             throw new IllegalStateException(

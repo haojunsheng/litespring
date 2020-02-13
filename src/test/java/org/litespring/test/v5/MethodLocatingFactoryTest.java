@@ -1,15 +1,15 @@
 package org.litespring.test.v5;
 
-import java.lang.reflect.Method;
-
-import org.litespring.aop.config.MethodLocatingFactory;
 import org.junit.Assert;
 import org.junit.Test;
+import org.litespring.aop.config.MethodLocatingFactory;
 import org.litespring.beans.factory.support.DefaultBeanFactory;
 import org.litespring.beans.factory.xml.XmlBeanDefinitionReader;
 import org.litespring.core.io.ClassPathResource;
 import org.litespring.core.io.Resource;
 import org.litespring.tx.TransactionManager;
+
+import java.lang.reflect.Method;
 
 public class MethodLocatingFactoryTest {
     @Test
@@ -28,6 +28,5 @@ public class MethodLocatingFactoryTest {
 
         Assert.assertTrue(TransactionManager.class.equals(m.getDeclaringClass()));
         Assert.assertTrue(m.equals(TransactionManager.class.getMethod("start")));
-
     }
 }
