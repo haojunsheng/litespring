@@ -77,7 +77,7 @@ public class XmlBeanDefinitionReader {
                     parseDefaultElement(ele); //普通的bean
                 } else if (this.isContextNamespace(namespaceUri)) {
                     parseComponentElement(ele); //例如<context:component-scan>
-                } else if (this.isAOPNamespace(namespaceUri)) {
+                } else if (this.isAOPNamespace(namespaceUri)) {// aop
                     parseAOPElement(ele);  //例如 <aop:config>
                 }
             }
@@ -94,6 +94,9 @@ public class XmlBeanDefinitionReader {
         }
     }
 
+    /** 解析AOp
+     * @param ele
+     */
     private void parseAOPElement(Element ele) {
         ConfigBeanDefinitionParser parser = new ConfigBeanDefinitionParser();
         parser.parse(ele, this.registry);

@@ -80,18 +80,26 @@ public class ConfigBeanDefinitionParser /*implements BeanDefinitionParser*/ {
      * @param registry
      */
     private void parseAspect(Element aspectElement, BeanDefinitionRegistry registry) {
+        // id属性
         String aspectId = aspectElement.attributeValue(ID);
+        // ref属性
         String aspectName = aspectElement.attributeValue(REF);
-
 
         List<BeanDefinition> beanDefinitions = new ArrayList<BeanDefinition>();
         List<RuntimeBeanReference> beanReferences = new ArrayList<RuntimeBeanReference>();
-
 
         List<Element> eleList = aspectElement.elements();
         boolean adviceFoundAlready = false;
         for (int i = 0; i < eleList.size(); i++) {
             Element ele = eleList.get(i);
+            /**
+             * isAdviceNode方法判断aspect下的标签是否是：
+             * <aop:before></aop:before>
+             * <aop:after></aop:after>
+             * <aop:after-returning></aop:after-returning>
+             * <aop:after-throwing></aop:after-throwing>
+             * <aop:around></aop:around>
+             */
             if (isAdviceNode(ele)) {
                 if (!adviceFoundAlready) {
                     adviceFoundAlready = true;
@@ -100,6 +108,7 @@ public class ConfigBeanDefinitionParser /*implements BeanDefinitionParser*/ {
                     }
                     beanReferences.add(new RuntimeBeanReference(aspectName));
                 }
+                // 解析advice，解析后成一个advisor，包含advice、pointcut等，注册到beanFactory中，类型是AspectJPointcutAdvisor
                 GenericBeanDefinition advisorDefinition = parseAdvice(
                         aspectName, i, aspectElement, ele, registry, beanDefinitions, beanReferences);
                 beanDefinitions.add(advisorDefinition);
@@ -110,8 +119,6 @@ public class ConfigBeanDefinitionParser /*implements BeanDefinitionParser*/ {
         for (Element pointcutElement : pointcuts) {
             parsePointcut(pointcutElement, registry);
         }
-
-
     }
 
 
@@ -243,10 +250,7 @@ public class ConfigBeanDefinitionParser /*implements BeanDefinitionParser*/ {
             registry.registerBeanDefinition(pointcutBeanName, pointcutDefinition);
         } else {
             BeanDefinitionReaderUtils.registerWithGeneratedName(pointcutDefinition, registry);
-
         }
-
-
         return pointcutDefinition;
     }
 

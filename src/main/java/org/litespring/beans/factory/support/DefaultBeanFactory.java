@@ -101,6 +101,7 @@ public class DefaultBeanFactory extends AbstractBeanFactory
         return createBean(bd);
     }
 
+    @Override
     protected Object createBean(BeanDefinition bd) {
         //创建实例
         Object bean = instantiateBean(bd);

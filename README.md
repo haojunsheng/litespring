@@ -1,3 +1,29 @@
+<!--ts-->
+
+   * [litespring](#litespring)
+   * [前言](#前言)
+   * [0 单元测试](#0-单元测试)
+   * [1. 概述](#1-概述)
+      * [1.1 介绍Spring IoC, AOP](#11-介绍spring-ioc-aop)
+      * [1.2 介绍TDD开发方式， 重构的方法](#12-介绍tdd开发方式-重构的方法)
+      * [1.3 第一个测试用例](#13-第一个测试用例)
+   * [2. setter-injection](#2-setter-injection)
+   * [3. constructor-injection](#3-constructor-injection)
+   * [4. auto-scan](#4-auto-scan)
+      * [4.1 java注解](#41-java注解)
+      * [4.2 思路](#42-思路)
+         * [4.2.1 读取XML文件](#421-读取xml文件)
+         * [4.2.2 扫描指定的包](#422-扫描指定的包)
+            * [4.2.2.1 实现PackageResourceLoader](#4221-实现packageresourceloader)
+            * [4.2.2.2 使用ASM读取Resource中的注解](#4222-使用asm读取resource中的注解)
+            * [4.2.2.3 创建BeanDefinition](#4223-创建beandefinition)
+         * [4.2.3 根据BeanDefinition创建Bean的实例，并注入](#423-根据beandefinition创建bean的实例并注入)
+   * [5. aop](#5-aop)
+
+<!-- Added by: anapodoton, at: Thu Feb 13 23:58:01 CST 2020 -->
+
+<!--te-->
+
 # litespring
 
 # 前言
@@ -89,6 +115,7 @@ p means package，c means class，i means interface, f means function,a means ab
   - config
     - MethodLocatingFactory(C):根据bean的名字和方法名，定位到Method.
     - AspectInstanceFactory(C):
+    - ConfigBeanDefinitionParser(C):aop标签解析器
   - framework
     - ReflectiveMethodInvocation(C):Spring's implementation of the AOP Alliance.
     - AopProxyFactory(I):
@@ -443,6 +470,16 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 # 5. aop
 
+1. 定义AspectJExpressionPointcut。来实现了PoinCut(切入点，定义了哪些连接点需要被织入需要被织入横切逻辑)和MethodMatcher接口。
+2. 实现MethodLocatingFactory。根据bean的名字和方法名，获取BeanDefinition,继而获取到bean的字节码，最后定位到Method.
+3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
+4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
+5. 引入FactoryBean和BeanFactoryAware。(区分FactoryBean和BeanFactory，前者是用来自定义Bean的创建逻辑)
+6. 创建合成的BeanDefinition:从xml中创建BeanDefinition。主要依靠ConfigBeanDefinitionParser这个类。
+7. 从“合成”Bean定义创建Bean实例；
+8. 用AspectJAutoProxyCreator组合所有功能;
+9. 实现Java动态代理aop。
+
 接下来我们来看aop。
 
 首先我们看下，**为什么要实现aop技术**？如下图所示，我们的用户管理，订单管理，支付管理，可能都需要日志，安全这些功能，在传统的实现中，一旦日志中的代码修改，那么我们的用户管理，订单管理都需要修改，这是不符合实际的，我们希望，日志，安全的修改不影响我们的业务代码，我们希望使用**xml或者注解**的形式，来配置二者之间的关系。
@@ -539,24 +576,17 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 <img src="img/20191006223448.png" style="zoom:33%;" />
 
-我们需要实现一个关键的类：ReflectiveMethodInvocation，保证拦截器按顺序执行。
+我们需要实现一个关键的类：ReflectiveMethodInvocation，保证拦截器按顺序执行。主要是使用了递归的功能。我们的ReflectiveMethodInvocation是MethodInvocation的实现。
 
 <img src="img/20191006223519.png" style="zoom:25%;" />
 
 
 
-下面我们将把CGLIB和链式拦截器调用进行结合,实现AopProxyFactory。
+下面我们将把CGLIB和链式拦截器调用进行结合,实现AopProxyFactory。核心函数是getProxy(ClassLoader classLoader)，返回了一个被CGLIB增强的实例，如org.litespring.service.v5.PetStoreService@458d7519。长成这样。
+
+![image-20200214113100878](img/image-20200214113100878.png)
 
 <img src="img/image-20200212111039869.png" alt="image-20200212111039869" style="zoom:50%;" />
-
-1. 定义AspectJExpressionPointcut。来实现了PoinCut(切入点，定义了哪些连接点需要被织入需要被织入横切逻辑)和MethodMatcher接口。
-2. 实现MethodLocatingFactory。根据bean的名字和方法名，获取BeanDefinition,继而获取到bean的字节码，最后定位到Method.
-3. 实现**ReflectiveMethodInvocation**(保证拦截器按顺序执行，实现Advice按顺序执行),这个是核心。
-4. 实现AopProxyFactory:给定一个AopConfig,使用Cglib生成一个对象的代理；
-5. 引入FactoryBean和BeanFactoryAware:
-6. 创建合成的BeanDefinition:
-7. 从“合成”Bean定义创建Bean实例；
-8. 用AspectJAutoProxyCreator组合所有功能;
 
 我们来总结下，到目前为止，实现了什么功能：
 
@@ -572,6 +602,18 @@ aop的基本概念是上面这些，接着我们来看pointcut。我们需要使
 
 spring并没有使用一个新的bean定义，直接使用了GenericBeanDefinition。
 
+我们使用ConfigBeanDefinitionParser来解析aop的xml，并且生成BeanDefinition。
+
+```
+// 下面的四个每一个都是一个BeanDefinition。
+<aop:pointcut id="placeOrder"
+              expression="execution(* org.litespring.service.v5.*.placeOrder(..))"/>
+
+<aop:before pointcut-ref="placeOrder" method="start"/>
+<aop:after-returning pointcut-ref="placeOrder" method="commit"/>
+<aop:after-throwing pointcut-ref="placeOrder" method="rollback"/>
+```
+
 <img src="img/20191007161602.png" style="zoom: 33%;" />
 
 
@@ -580,15 +622,17 @@ spring并没有使用一个新的bean定义，直接使用了GenericBeanDefiniti
 
 <img src="img/20191007163620.png" style="zoom:33%;" />
 
-但是遇到了类型不匹配的问题。
+但是遇到了类型不匹配的问题。我们让AspectInstanceFactory实现BeanFactoryAware接口，而MethodLocatingFactory也实现了BeanFactoryAware接口，同时getObject方法将会返回对应的Method，也即Object，从而实现了类型的匹配问题。
 
 <img src="img/20191007163739.png" style="zoom:25%;" />
 
+到这里我们终于生成了BeanDefinition。
 
+下面我们尝试使用BeanDefinition生成Bean的实例了。
 
-aop的核心，一个是链式调用，另外一个是通过Factory获得代理的实例。
+最后我们AspectJAutoProxyCreator组合所有功能。实现了BeanPostProcessor接口，
 
-
+我们来总结下：aop的核心，一个是链式调用，另外一个是通过Factory获得代理的实例。
 
 
 

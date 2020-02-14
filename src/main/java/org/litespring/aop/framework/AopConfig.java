@@ -1,9 +1,9 @@
 package org.litespring.aop.framework;
 
+import org.litespring.aop.Advice;
+
 import java.lang.reflect.Method;
 import java.util.List;
-
-import org.litespring.aop.Advice;
 
 /**
  * Interface to be implemented by classes that hold the configuration
@@ -23,7 +23,9 @@ public interface AopConfig {
     Class<?> getTargetClass();
 
     Object getTargetObject();
-
+    /**
+     * Are we proxying the full target class instead of specified interfaces?
+     */
     boolean isProxyTargetClass();
 
     Class<?>[] getProxiedInterfaces();
