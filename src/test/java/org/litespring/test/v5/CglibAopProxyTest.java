@@ -25,6 +25,7 @@ public class CglibAopProxyTest extends AbstractV5Test {
 
     @Before
     public void setUp() throws Exception {
+
         MessageTracker.clearMsgs();
         String expression = "execution(* org.litespring.service.v5.*.placeOrder(..))";
         pc = new AspectJExpressionPointcut();

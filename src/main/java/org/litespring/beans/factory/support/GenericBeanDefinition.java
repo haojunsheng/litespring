@@ -101,6 +101,7 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     /**
      * 生成bean的字节码
+     *
      * @param classLoader
      * @return
      * @throws ClassNotFoundException
@@ -117,6 +118,7 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     /**
      * 获取beanClass
+     *
      * @return
      * @throws IllegalStateException
      */

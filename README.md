@@ -32,11 +32,47 @@
 
 # 0 单元测试
 
+<img src="https://gitee.com/haojunsheng/ImageHost/raw/master/img/20210704144847.png" alt="image-20210704144845033" style="zoom: 25%;" />
+
+
+
+<img src="https://gitee.com/haojunsheng/ImageHost/raw/master/img/20210704144944.png" alt="image-20210704144942014" style="zoom:25%;" />
+
+<img src="https://gitee.com/haojunsheng/ImageHost/raw/master/img/20210704145019.png" alt="image-20210704145017968" style="zoom:25%;" />
+
+<img src="https://gitee.com/haojunsheng/ImageHost/raw/master/img/20210704145058.png" alt="image-20210704145056844" style="zoom:25%;" />
+
+```java
+@org.junit.Test
+    public void parseTest() {
+        //step 1: 创建mock 对象
+        MockControl mockControl = MockControl.createControl(HttpServletRequest.class);
+        HttpServletRequest request = (HttpServletRequest) mockControl.getMock();
+
+        //step2: 设置并记录mock对象的行为
+        request.getParameter("startRow");
+        mockControl.setReturnValue("10");
+        request.getParameter("endRow");
+        mockControl.setReturnValue("20");
+
+        // step3: 转换为回放模式
+        mockControl.replay();
+
+        // step 4: 测试代码
+        URLParser parser = new URLParser(request);
+        parser.parse();
+    }
+```
+
+<img src="https://gitee.com/haojunsheng/ImageHost/raw/master/img/20210704151417.png" alt="image-20210704151415270" style="zoom:25%;" />
+
 # 1. 概述
 
 http://repo.spring.io/libs-release/org/springframework/spring/
 
 https://github.com/dachengxi/spring-framework-3.2.18.RELEASE
+
+
 
 Spring 3.2.18
 
@@ -245,9 +281,9 @@ public interface BeanDefinition {
 
 ![](img/20190908223028.png)
 
-![](https://github.com/anapodoton/ImageHost/blob/master/img/20190908223201.png?raw=true)
 
 
+<img src="img/image-20200325162049393.png" alt="image-20200325162049393" style="zoom:50%;" />
 
 | 类/接口                      | 功能                                                         | 备注                |
 | ---------------------------- | ------------------------------------------------------------ | ------------------- |
@@ -274,14 +310,6 @@ public interface BeanDefinition {
 | FileSystemResource              | 从文件获取资源                   |                    |
 
 # 2. setter-injection
-
-在上面，我们用构造函数的方式实现了类的注入，正如我们所知道的，spring IOC的常见注入方式分为3中，分别是构造函数，setter方式和注解的方式，这节课我们来学习注解的方式。
-
-| 注入方式 | 优点 | 缺点 |
-| -------- | ---- | ---- |
-| 构造函数 |      |      |
-| setter   |      |      |
-| 注解     |      |      |
 
 1. 实现PropertyValue相关的代码(获取Bean的定义)
 
@@ -352,8 +380,8 @@ public interface BeanDefinition {
 1. 实现PackageResourceLoader,把一个package下面的class 变成resource。
 2. 实现两个Visitor：ClassMetadataReadingVisitor和AnnotationMetadataReadingVisitor，用于读取类和注解的信息。(使用ASM读取类的Metadata)
 3. 实现SimpleMetadataReader，封装上面两个Visitor。
-4. 实现Scanner。读取xml文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字(给auto-scan的Bean 命名： BeanNameGenerator)。
-5. 实现DependencyDescriptor和InjectioMetadata。DependencyDescriptor用于描述依赖的字段，InjectioMetadata则把注入到targetClass中。
+4. 实现Scanner。读取文件，把标记为@Component 的类，创建ScannedGenericBeanDefinition，并且注册到BeanFactory中。AnnotationBeanNameGenerator用来生成bean的名字(给auto-scan的Bean 命名： BeanNameGenerator)。
+5. 实现DependencyDescriptor和InjectioMetadata。DependencyDescriptor用于描述依赖的字段，InjectioMetadata则把字段注入到targetClass中。
 6. 实现AutowiredAnnotationProcessor，可以方便的创建InjectioMetadata。(用AutowiredAnnotationProcessor实现注入)
 7. 实现BeanPostProcessor。
 
@@ -430,15 +458,15 @@ ClassMetadataReadingVisitor用于读取类的信息，AnnotationMetadataReadingV
 
 上面我们处理了@Component注解，下面我们来处理@Autowired注解。
 
-![](img/20190930110940.png)
+<img src="img/20190930110940.png" style="zoom:50%;" />
 
 DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段的描述，对于MethodParameter用于构造函数和set函数的情况，如上图，我们没有进行实现。
 
-![](img/20190930111521.png)
+<img src="img/20190930111521.png" style="zoom:50%;" />
 
 为了实现接口最小化的原则，我们并不想把resolveDependency()接口放在BeanFactory接口中，所以我们设计了如下的继承体系。
 
-![](img/20190930112543.png)
+<img src="img/20190930112543.png" style="zoom: 33%;" />
 
 下面我们进行封装。
 
@@ -490,9 +518,9 @@ DependencyDescriptor表示的是对依赖的描述符，我们只实现了字段
 
 我们接着来看**如何实现aop**？
 
-我们有2中方案，1是在编译器来实现，把日志功能在编译器放到业务代码，这样的缺点是致命的，我们必须有源代代码才可以做到，这在实际中是不可能的。
+我们有2中方案，1是在编译期来实现，把日志功能在编译器放到业务代码，这样的缺点是致命的，我们必须有源代代码才可以做到，这在实际中是不可能的。
 
-第二种方案是在运行期来做手脚。运行时来动态生成类，问题在于java字节码一旦装入方法区就无法修改，我们如何进行增强呢？一种方案是使用**继承**的技术。在运行时动态生成一个类，继承待增强的类。另外一种方案是使用**动态代理**的技术，定义一个借口，然后实现其兄弟类来实现。
+第二种方案是在运行期来做手脚。运行时来动态生成类，问题在于java字节码一旦装入方法区就无法修改，我们如何进行增强呢？一种方案是使用**继承**的技术。在运行时动态生成一个类，继承待增强的类(CGLIB)。另外一种方案是使用**动态代理**的技术，定义一个借口，然后实现其兄弟类来实现。
 
 <img src="img/20200211204344.png" style="zoom:50%;" />
 
@@ -633,8 +661,3 @@ spring并没有使用一个新的bean定义，直接使用了GenericBeanDefiniti
 最后我们AspectJAutoProxyCreator组合所有功能。实现了BeanPostProcessor接口，
 
 我们来总结下：aop的核心，一个是链式调用，另外一个是通过Factory获得代理的实例。
-
-
-
-
-
